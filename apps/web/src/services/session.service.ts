@@ -11,6 +11,15 @@ export async function listSessions(): Promise<Models.Document[]> {
   return response.documents;
 }
 
+export async function listSessionsByCampaign(campaignId: string): Promise<Models.Document[]> {
+  const response = await databases.listDocuments(DATABASE_ID, COLLECTIONS.GAME_SESSIONS, [
+    Query.equal('campaignId', campaignId),
+    Query.orderDesc('$createdAt'),
+    Query.limit(50),
+  ]);
+  return response.documents;
+}
+
 export async function getSession(sessionId: string): Promise<Models.Document> {
   return databases.getDocument(DATABASE_ID, COLLECTIONS.GAME_SESSIONS, sessionId);
 }

@@ -103,7 +103,8 @@ app.post('/voice/token', async (req, res) => {
     if (jwt) {
       try {
         userId = await verifyJwt(jwt);
-      } catch {
+      } catch (err) {
+        log.warn('JWT verification failed', { error: String(err) });
         res.status(401).json({ error: 'Invalid authentication' });
         return;
       }

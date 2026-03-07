@@ -4,14 +4,17 @@ import { useRouter } from 'vue-router';
 import type { Models } from 'appwrite';
 import { useAuthStore } from '../stores/useAuthStore.js';
 import { useSessionListStore } from '../stores/useSessionListStore.js';
+import { listCampaigns } from '../services/campaign.service.js';
 
 const authStore = useAuthStore();
 const sessionStore = useSessionListStore();
 const router = useRouter();
 
 const showForm = ref(false);
+const campaigns = ref<Models.Document[]>([]);
 const form = ref({
   title: '',
+  campaignId: '' as string,
   textChatEnabled: true,
   voiceChatEnabled: false,
   maxPlayers: 6,
@@ -19,10 +22,13 @@ const form = ref({
 
 onMounted(async () => {
   await sessionStore.fetchSessions();
+  if (authStore.user) {
+    campaigns.value = await listCampaigns(authStore.user.$id);
+  }
 });
 
 function resetForm() {
-  form.value = { title: '', textChatEnabled: true, voiceChatEnabled: false, maxPlayers: 6 };
+  form.value = { title: '', campaignId: '', textChatEnabled: true, voiceChatEnabled: false, maxPlayers: 6 };
   showForm.value = false;
 }
 
@@ -31,7 +37,7 @@ async function handleCreate() {
   const doc = await sessionStore.addSession({
     title: form.value.title,
     hostUserId: authStore.user.$id,
-    campaignId: null,
+    campaignId: form.value.campaignId || null,
     rulesProfileId: null,
     textChatEnabled: form.value.textChatEnabled,
     voiceChatEnabled: form.value.voiceChatEnabled,
@@ -57,6 +63,12 @@ const editForm = ref({
 
 function statusBadgeClass(status: string) {
   return `badge badge-${status}`;
+}
+
+function campaignName(session: Models.Document): string | null {
+  if (!session['campaignId']) return null;
+  const c = campaigns.value.find((camp) => camp.$id === session['campaignId']);
+  return c ? (c.title as string) : null;
 }
 
 function isOwnSession(session: Models.Document) {
@@ -115,6 +127,13 @@ async function handleCancel(sessionId: string) {
         <div class="field">
           <label for="title">Session Title</label>
           <input id="title" v-model="form.title" type="text" required />
+        </div>
+        <div class="field">
+          <label for="campaign">Campaign</label>
+          <select id="campaign" v-model="form.campaignId">
+            <option value="">— No campaign —</option>
+            <option v-for="c in campaigns" :key="c.$id" :value="c.$id">{{ c.title }}</option>
+          </select>
         </div>
         <div class="field">
           <label for="maxPlayers">Max Players</label>
@@ -180,6 +199,7 @@ async function handleCancel(sessionId: string) {
           <h3>{{ session.title }}</h3>
           <div class="session-meta">
             <span :class="statusBadgeClass(session.status)">{{ session.status }}</span>
+            <span v-if="campaignName(session)" class="campaign-tag">{{ campaignName(session) }}</span>
             <span>{{ session.maxPlayers }} players max</span>
             <span v-if="session.textChatEnabled" class="feature">Text</span>
             <span v-if="session.voiceChatEnabled" class="feature">Voice</span>
@@ -314,6 +334,26 @@ async function handleCancel(sessionId: string) {
   border-radius: 4px;
   font-size: 0.7rem;
   color: #b0b0d0;
+}
+.campaign-tag {
+  background: #2e1a3e;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  color: #c0a0e0;
+}
+.field select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: #0f0f1a;
+  border: 1px solid #3a3a4e;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+.field select:focus {
+  outline: none;
+  border-color: #6060a0;
 }
 .error {
   color: #ff6b6b;

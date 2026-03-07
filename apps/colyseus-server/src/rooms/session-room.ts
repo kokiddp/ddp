@@ -309,20 +309,20 @@ export class SessionRoom extends Room<SessionState> {
       );
     });
 
-    this.onMessage('endSession', (client) => {
+    this.onMessage('endSession', async (client) => {
       const player = this.state.players.get(client.sessionId);
       if (!player || player.role !== 'host') return;
 
       this.state.status = 'ended';
       this.broadcast('sessionStatus', { status: 'ended' });
 
-      updateSessionStatus(this.state.sessionId, 'ended').catch((err) =>
-        log.error('Failed to end session', { error: String(err) }),
-      );
-
-      this.persistSnapshot(player.userId)
-        .catch((err) => log.error('End snapshot failed', { error: String(err) }))
-        .finally(() => this.disconnect());
+      try {
+        await updateSessionStatus(this.state.sessionId, 'ended');
+        await this.persistSnapshot(player.userId);
+      } catch (err) {
+        log.error('Failed to finalize session end', { error: String(err) });
+      }
+      this.disconnect();
     });
 
     this.onMessage('submitAction', (client, message: unknown) => {

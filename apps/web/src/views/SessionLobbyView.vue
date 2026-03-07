@@ -38,29 +38,17 @@ interface LobbyPlayer {
 }
 const livePlayers = ref<LobbyPlayer[]>([]);
 
-onMounted(async () => {
-  await sessionStore.loadSession(props.sessionId);
-
-  // Check if we're already in the roster
-  if (authStore.user) {
-    const existing = sessionStore.players.find((p) => p.userId === authStore.user!.$id && p.status !== 'left');
-    if (existing) {
-      sessionStore.currentPlayerId = existing.$id;
-    }
-
-    // Load characters for binding
-    await characterStore.fetchCharacters(authStore.user.$id);
-  }
-
-  // Connect to Colyseus room for real-time updates
+async function connectToColyseusRoom() {
   try {
     const hostUserId = sessionStore.session?.['hostUserId'] as string | undefined;
     await joinSessionRoom(props.sessionId, {
       onSessionStatus: (data) => {
         sessionStatus.value = data.status;
         if (data.status === 'active') {
-          // Session started — navigate to play view
-          router.push(`/app/sessions/${props.sessionId}/play`);
+          // Also update Appwrite status so it persists on reload
+          sessionStore.startSession().then(() => {
+            router.push(`/app/sessions/${props.sessionId}/play`);
+          });
         }
       },
       onPlayerJoined: (data) => {
@@ -88,6 +76,26 @@ onMounted(async () => {
   } catch (e: unknown) {
     connectionError.value = e instanceof Error ? e.message : 'Failed to connect to session room';
   }
+}
+
+onMounted(async () => {
+  await sessionStore.loadSession(props.sessionId);
+
+  // Check if we're already in the roster
+  if (authStore.user) {
+    const existing = sessionStore.players.find((p) => p.userId === authStore.user!.$id && p.status !== 'left');
+    if (existing) {
+      sessionStore.currentPlayerId = existing.$id;
+    }
+
+    // Load characters for binding
+    await characterStore.fetchCharacters(authStore.user.$id);
+  }
+
+  // Only connect to Colyseus if we're already a member (onAuth requires membership)
+  if (hasJoined.value) {
+    await connectToColyseusRoom();
+  }
 });
 
 onUnmounted(async () => {
@@ -98,7 +106,10 @@ onUnmounted(async () => {
 async function handleJoin() {
   if (!authStore.user) return;
   const isHost = sessionStore.session?.hostUserId === authStore.user.$id;
-  await sessionStore.join(props.sessionId, authStore.user.$id, isHost ? 'host' : 'player');
+  const ok = await sessionStore.join(props.sessionId, authStore.user.$id, isHost ? 'host' : 'player');
+  if (ok && !connectedToRoom.value) {
+    await connectToColyseusRoom();
+  }
 }
 
 async function handleLeave() {
@@ -108,19 +119,19 @@ async function handleLeave() {
   }
 }
 
-function handleToggleReady() {
+async function handleToggleReady() {
   // Send via Colyseus for real-time broadcast
   sendToggleReady();
   // Also update Appwrite for persistence
-  sessionStore.toggleReady();
+  await sessionStore.toggleReady();
 }
 
-function handleBindCharacter(event: Event) {
+async function handleBindCharacter(event: Event) {
   const select = event.target as HTMLSelectElement;
   const charId = select.value;
   if (charId) {
     sendBindCharacter(charId);
-    sessionStore.bindCharacter(charId);
+    await sessionStore.bindCharacter(charId);
   }
 }
 

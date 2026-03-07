@@ -226,19 +226,19 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [ ] Associate sessions with campaigns
 
 ### Rules profiles
-- [ ] Define `RulesProfile` persistence model
+- [x] Define `RulesProfile` persistence model
 - [ ] Create rules-profile CRUD basics
-- [ ] Define config blob strategy for rules profiles
+- [x] Define config blob strategy for rules profiles
 - [ ] Document what belongs in core rules profile vs extension package
 
 ### Protocol abstraction work
-- [ ] Define actor abstraction
-- [ ] Define resource abstraction
+- [x] Define actor abstraction
+- [x] Define resource abstraction
 - [ ] Define inventory abstraction
-- [ ] Define action abstraction
-- [ ] Define status abstraction
-- [ ] Define scene abstraction
-- [ ] Define timeline/turn abstraction
+- [x] Define action abstraction
+- [x] Define status abstraction
+- [x] Define scene abstraction
+- [x] Define timeline/turn abstraction
 - [ ] Define trigger abstraction
 
 ---
@@ -390,25 +390,25 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 ## 13. Protocol engine and extensibility
 
 ### Shared-rules package
-- [ ] Create protocol-level rule interfaces
-- [ ] Create base actor model helpers
-- [ ] Create resource mutation helpers
-- [ ] Create generic check/test resolution contracts
-- [ ] Create status effect lifecycle helpers
-- [ ] Create scene transition helpers
-- [ ] Create turn/timeline helpers
+- [x] Create protocol-level rule interfaces
+- [x] Create base actor model helpers
+- [x] Create resource mutation helpers
+- [x] Create generic check/test resolution contracts
+- [x] Create status effect lifecycle helpers
+- [x] Create scene transition helpers
+- [x] Create turn/timeline helpers
 - [ ] Create event trigger helpers
 
 ### Extensibility strategy
-- [ ] Define plugin or module loading strategy for future rulesets
-- [ ] Decide whether rules packages live inside monorepo initially
-- [ ] Define how a rules profile activates specific rule handlers
+- [x] Define plugin or module loading strategy for future rulesets
+- [x] Decide whether rules packages live inside monorepo initially
+- [x] Define how a rules profile activates specific rule handlers
 - [ ] Document boundary between core protocol and custom campaign logic
 
 ### Important guardrails
-- [ ] Do not bake setting-specific terms into core protocol
-- [ ] Do not create a fake-generic abstraction with no real users yet
-- [ ] Start with a small, useful set of protocol primitives
+- [x] Do not bake setting-specific terms into core protocol
+- [x] Do not create a fake-generic abstraction with no real users yet
+- [x] Start with a small, useful set of protocol primitives
 
 ---
 
@@ -576,8 +576,8 @@ This is the recommended execution sequence for development.
 - [x] LiveKit join/leave/mute/deafen UX
 
 ### Phase F — protocol framework maturation
-- [ ] shared-rules package expansion
-- [ ] rules-profile strategy
+- [x] shared-rules package expansion
+- [x] rules-profile strategy
 - [ ] extensibility docs and examples
 
 ### Phase G — hardening

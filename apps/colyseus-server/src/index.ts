@@ -3,6 +3,7 @@ import { WebSocketTransport } from '@colyseus/ws-transport';
 import express from 'express';
 import { createServer } from 'http';
 import { SessionRoom } from './rooms/session-room.js';
+import { log } from './logger.js';
 
 const app = express();
 const port = Number(process.env.PORT) || 2567;
@@ -20,5 +21,5 @@ const gameServer = new Server({
 gameServer.define('session', SessionRoom);
 
 httpServer.listen(port, () => {
-  console.log(`[DDP] Colyseus server listening on port ${port}`);
+  log.info('Colyseus server listening', { port });
 });

@@ -1,11 +1,17 @@
 import express from 'express';
 import { AccessToken } from 'livekit-server-sdk';
 import { Client, Databases, Query } from 'node-appwrite';
+import { log } from './logger.js';
 
 const app = express();
 const port = Number(process.env.PORT) || 3100;
 
 app.use(express.json());
+
+app.use((req, _res, next) => {
+  log.info('Incoming request', { method: req.method, path: req.path });
+  next();
+});
 
 // ── Appwrite setup ──
 
@@ -117,11 +123,11 @@ app.post('/voice/token', async (req, res) => {
     const token = await at.toJwt();
     res.json({ token, room: roomName });
   } catch (err) {
-    console.error('[voice/token] Error:', err);
+    log.error('Voice token issuance failed', { error: String(err) });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.listen(port, () => {
-  console.log(`[DDP] Integration API listening on port ${port}`);
+  log.info('Integration API listening', { port });
 });

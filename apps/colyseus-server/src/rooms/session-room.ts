@@ -11,6 +11,7 @@ import {
   saveTextMessage,
   getTextMessages,
 } from '../appwrite.js';
+import { log } from '../logger.js';
 
 // ── State schemas ──
 
@@ -102,7 +103,7 @@ export class SessionRoom extends Room<SessionState> {
     // Register message handlers
     this.registerMessageHandlers();
 
-    console.log(`[SessionRoom] Room created: ${this.roomId} (session: ${this.state.sessionId})`);
+    log.info('Room created', { roomId: this.roomId, sessionId: this.state.sessionId });
   }
 
   async onJoin(client: Client, _options: JoinOptions, auth?: AuthResult): Promise<void> {
@@ -116,7 +117,7 @@ export class SessionRoom extends Room<SessionState> {
     player.status = 'joined';
 
     this.state.players.set(client.sessionId, player);
-    console.log(`[SessionRoom] Player joined: ${userId}`);
+    log.info('Player joined', { userId, roomId: this.roomId });
   }
 
   async onLeave(client: Client, consented: boolean): Promise<void> {
@@ -130,20 +131,20 @@ export class SessionRoom extends Room<SessionState> {
       player.status = 'left';
       this.state.players.delete(client.sessionId);
       this.clientUserMap.delete(client.sessionId);
-      console.log(`[SessionRoom] Player left: ${userId}`);
+      log.info('Player left', { userId, roomId: this.roomId });
     } else {
       // Disconnected — allow reconnection for 60s
       try {
         await this.allowReconnection(client, 60);
         // Reconnected successfully
         player.status = 'joined';
-        console.log(`[SessionRoom] Player reconnected: ${userId}`);
+        log.info('Player reconnected', { userId, roomId: this.roomId });
       } catch {
         // Timed out waiting for reconnection
         player.status = 'left';
         this.state.players.delete(client.sessionId);
         this.clientUserMap.delete(client.sessionId);
-        console.log(`[SessionRoom] Player reconnection timed out: ${userId}`);
+        log.warn('Player reconnection timed out', { userId, roomId: this.roomId });
       }
     }
   }
@@ -158,13 +159,13 @@ export class SessionRoom extends Room<SessionState> {
       try {
         await this.persistSnapshot('system');
         await updateSessionStatus(this.state.sessionId, 'paused');
-        console.log(`[SessionRoom] Final snapshot saved for session: ${this.state.sessionId}`);
+        log.info('Final snapshot saved', { sessionId: this.state.sessionId, roomId: this.roomId });
       } catch (err) {
-        console.error(`[SessionRoom] Failed to save final snapshot:`, err);
+        log.error('Failed to save final snapshot', { sessionId: this.state.sessionId, error: String(err) });
       }
     }
 
-    console.log(`[SessionRoom] Room disposed: ${this.roomId}`);
+    log.info('Room disposed', { roomId: this.roomId });
   }
 
   // ── State bootstrap ──
@@ -194,9 +195,9 @@ export class SessionRoom extends Room<SessionState> {
 
       // Load current players from Appwrite
       const players = await getSessionPlayers(this.state.sessionId);
-      console.log(`[SessionRoom] Loaded ${players.length} players from Appwrite`);
+      log.info('Loaded players from Appwrite', { count: players.length, sessionId: this.state.sessionId });
     } catch (err) {
-      console.error(`[SessionRoom] Bootstrap failed:`, err);
+      log.error('Bootstrap failed', { sessionId: this.state.sessionId, error: String(err) });
     }
   }
 
@@ -224,13 +225,13 @@ export class SessionRoom extends Room<SessionState> {
       this.state.status = 'active';
 
       updateSessionStatus(this.state.sessionId, 'active').catch((err) =>
-        console.error('[SessionRoom] Failed to update session status:', err),
+        log.error('Failed to update session status', { error: String(err) }),
       );
 
       // Start periodic snapshots (every 5 minutes)
       this.snapshotInterval = setInterval(() => {
         this.persistSnapshot(player.userId).catch((err) =>
-          console.error('[SessionRoom] Auto-snapshot failed:', err),
+          log.error('Auto-snapshot failed', { error: String(err) }),
         );
       }, 5 * 60 * 1000);
     });
@@ -242,11 +243,11 @@ export class SessionRoom extends Room<SessionState> {
       this.state.status = 'paused';
 
       updateSessionStatus(this.state.sessionId, 'paused').catch((err) =>
-        console.error('[SessionRoom] Failed to pause session:', err),
+        log.error('Failed to pause session', { error: String(err) }),
       );
 
       this.persistSnapshot(player.userId).catch((err) =>
-        console.error('[SessionRoom] Pause snapshot failed:', err),
+        log.error('Pause snapshot failed', { error: String(err) }),
       );
     });
 
@@ -257,11 +258,11 @@ export class SessionRoom extends Room<SessionState> {
       this.state.status = 'ended';
 
       updateSessionStatus(this.state.sessionId, 'ended').catch((err) =>
-        console.error('[SessionRoom] Failed to end session:', err),
+        log.error('Failed to end session', { error: String(err) }),
       );
 
       this.persistSnapshot(player.userId)
-        .catch((err) => console.error('[SessionRoom] End snapshot failed:', err))
+        .catch((err) => log.error('End snapshot failed', { error: String(err) }))
         .finally(() => this.disconnect());
     });
 
@@ -294,7 +295,7 @@ export class SessionRoom extends Room<SessionState> {
       if (!player || player.role !== 'host') return;
 
       this.persistSnapshot(player.userId).catch((err) =>
-        console.error('[SessionRoom] Manual snapshot failed:', err),
+        log.error('Manual snapshot failed', { error: String(err) }),
       );
     });
 
@@ -332,7 +333,7 @@ export class SessionRoom extends Room<SessionState> {
         kind: textMsg.kind,
         body: textMsg.body,
       }).catch((err) =>
-        console.error('[SessionRoom] Failed to persist text message:', err),
+        log.error('Failed to persist text message', { error: String(err) }),
       );
     });
 
@@ -350,7 +351,7 @@ export class SessionRoom extends Room<SessionState> {
           createdAt: m.$createdAt,
         })));
       }).catch((err) =>
-        console.error('[SessionRoom] Failed to load chat history:', err),
+        log.error('Failed to load chat history', { error: String(err) }),
       );
     });
   }

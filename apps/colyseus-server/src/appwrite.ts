@@ -113,6 +113,33 @@ export async function saveSnapshot(
 }
 
 /**
+ * Save a text message to Appwrite.
+ */
+export async function saveTextMessage(data: {
+  gameSessionId: string;
+  senderUserId: string;
+  senderCharacterId: string | null;
+  kind: string;
+  body: string;
+}) {
+  const { ID } = await import('node-appwrite');
+  return databases.createDocument(DATABASE_ID, COLLECTIONS.TEXT_MESSAGES, ID.unique(), data);
+}
+
+/**
+ * Load recent text messages for a session.
+ */
+export async function getTextMessages(gameSessionId: string, limit = 50) {
+  const result = await databases.listDocuments(DATABASE_ID, COLLECTIONS.TEXT_MESSAGES, [
+    Query.equal('gameSessionId', gameSessionId),
+    Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+  ]);
+  // Return in chronological order
+  return result.documents.reverse();
+}
+
+/**
  * Update the game session status in Appwrite.
  */
 export async function updateSessionStatus(sessionId: string, status: string) {

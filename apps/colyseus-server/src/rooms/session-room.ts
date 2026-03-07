@@ -8,6 +8,8 @@ import {
   getLatestSnapshot,
   saveSnapshot,
   updateSessionStatus,
+  saveTextMessage,
+  getTextMessages,
 } from '../appwrite.js';
 
 // ── State schemas ──
@@ -293,6 +295,62 @@ export class SessionRoom extends Room<SessionState> {
 
       this.persistSnapshot(player.userId).catch((err) =>
         console.error('[SessionRoom] Manual snapshot failed:', err),
+      );
+    });
+
+    // ── Text chat ──
+
+    this.onMessage('sendTextMessage', (client, message: { body: string; senderCharacterId?: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      if (!message?.body || typeof message.body !== 'string' || message.body.length === 0) {
+        return;
+      }
+
+      // Enforce max length
+      const body = message.body.slice(0, 5000);
+      const timestamp = new Date().toISOString();
+
+      const textMsg = {
+        gameSessionId: this.state.sessionId,
+        senderUserId: player.userId,
+        senderCharacterId: message.senderCharacterId ?? null,
+        kind: 'user' as const,
+        body,
+        createdAt: timestamp,
+      };
+
+      // Broadcast to all connected clients
+      this.broadcast('textMessage', textMsg);
+
+      // Persist to Appwrite (fire-and-forget)
+      saveTextMessage({
+        gameSessionId: textMsg.gameSessionId,
+        senderUserId: textMsg.senderUserId,
+        senderCharacterId: textMsg.senderCharacterId,
+        kind: textMsg.kind,
+        body: textMsg.body,
+      }).catch((err) =>
+        console.error('[SessionRoom] Failed to persist text message:', err),
+      );
+    });
+
+    this.onMessage('loadChatHistory', (client) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      getTextMessages(this.state.sessionId).then((messages) => {
+        client.send('chatHistory', messages.map((m) => ({
+          gameSessionId: m.gameSessionId,
+          senderUserId: m.senderUserId,
+          senderCharacterId: m.senderCharacterId ?? null,
+          kind: m.kind,
+          body: m.body,
+          createdAt: m.$createdAt,
+        })));
+      }).catch((err) =>
+        console.error('[SessionRoom] Failed to load chat history:', err),
       );
     });
   }

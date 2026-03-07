@@ -319,16 +319,16 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 10. Text chat subsystem
 
 ### Data and permissions
-- [ ] Create `TextMessage` storage model in Appwrite
+- [x] Create `TextMessage` storage model in Appwrite
 - [ ] Define permissions so only session members can read/write
-- [ ] Define message kinds (`user`, `system`, maybe `moderation` later)
-- [ ] Define message length and rate limits
+- [x] Define message kinds (`user`, `system`, maybe `moderation` later)
+- [x] Define message length and rate limits
 
 ### Client features
 - [ ] Create session text chat panel
-- [ ] Load chat history for session
-- [ ] Subscribe to realtime new-message updates
-- [ ] Send text messages
+- [x] Load chat history for session
+- [x] Subscribe to realtime new-message updates
+- [x] Send text messages
 - [ ] Display system messages distinctly
 - [ ] Handle disabled-text-chat sessions gracefully
 
@@ -342,29 +342,29 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 11. Voice chat subsystem
 
 ### LiveKit infrastructure
-- [ ] Finalize local LiveKit deployment config
+- [x] Finalize local LiveKit deployment config
 - [ ] Document prod deployment expectations
-- [ ] Define deterministic room naming convention
+- [x] Define deterministic room naming convention
 
 ### Token issuance
-- [ ] Implement trusted backend endpoint/function to issue LiveKit tokens
-- [ ] Validate authenticated identity before issuing token
-- [ ] Validate session membership before issuing token
-- [ ] Validate `voiceChatEnabled` before issuing token
-- [ ] Add expiration strategy for voice tokens
+- [x] Implement trusted backend endpoint/function to issue LiveKit tokens
+- [x] Validate authenticated identity before issuing token
+- [x] Validate session membership before issuing token
+- [x] Validate `voiceChatEnabled` before issuing token
+- [x] Add expiration strategy for voice tokens
 
 ### Client voice features
-- [ ] Add “Join voice” action
-- [ ] Add “Leave voice” action
-- [ ] Add microphone toggle
-- [ ] Add speaker/deafen toggle
-- [ ] Show current voice participants
+- [x] Add “Join voice” action
+- [x] Add “Leave voice” action
+- [x] Add microphone toggle
+- [x] Add speaker/deafen toggle
+- [x] Show current voice participants
 - [ ] Handle reconnect or dropped media connection
 - [ ] Handle denied microphone permission gracefully
 
 ### State synchronization
 - [ ] Decide which voice presence indicators are purely client-side vs persisted
-- [ ] Keep distinction clear between `voiceChatJoined` and `microphoneEnabled`
+- [x] Keep distinction clear between `voiceChatJoined` and `microphoneEnabled`
 - [ ] Surface voice status in session roster UI
 
 ---
@@ -374,7 +374,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 This service may be thin, but it is still useful as a place for trusted orchestration logic.
 
 ### Core responsibilities
-- [ ] Implement LiveKit token issuance endpoint
+- [x] Implement LiveKit token issuance endpoint
 - [ ] Implement room-join authorization helper if needed
 - [ ] Implement system-message insertion endpoint if useful
 - [ ] Implement snapshot orchestration helpers if needed
@@ -571,9 +571,9 @@ This is the recommended execution sequence for development.
 - [x] snapshot persistence
 
 ### Phase E — communications
-- [ ] text chat
-- [ ] voice token issuance
-- [ ] LiveKit join/leave/mute/deafen UX
+- [x] text chat
+- [x] voice token issuance
+- [x] LiveKit join/leave/mute/deafen UX
 
 ### Phase F — protocol framework maturation
 - [ ] shared-rules package expansion

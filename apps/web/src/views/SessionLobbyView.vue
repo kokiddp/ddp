@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed } from 'vue';
+import { onMounted, onUnmounted, computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/useAuthStore.js';
 import { useActiveSessionStore } from '../stores/useActiveSessionStore.js';
 import { useCharacterStore } from '../stores/useCharacterStore.js';
+import {
+  joinSessionRoom,
+  leaveSessionRoom,
+  sendToggleReady,
+  sendBindCharacter,
+  sendStartSession,
+} from '../services/colyseus.service.js';
 
 const props = defineProps<{ sessionId: string }>();
 const authStore = useAuthStore();
@@ -16,6 +23,20 @@ const currentPlayer = computed(() =>
   sessionStore.players.find((p) => p.$id === sessionStore.currentPlayerId),
 );
 const isReady = computed(() => currentPlayer.value?.status === 'ready');
+
+// Real-time state from Colyseus
+const connectedToRoom = ref(false);
+const connectionError = ref<string | null>(null);
+const sessionStatus = ref('lobby');
+const startError = ref<string | null>(null);
+
+// Track real-time player roster from Colyseus
+interface LobbyPlayer {
+  userId: string;
+  role: string;
+  ready: boolean;
+}
+const livePlayers = ref<LobbyPlayer[]>([]);
 
 onMounted(async () => {
   await sessionStore.loadSession(props.sessionId);
@@ -30,9 +51,47 @@ onMounted(async () => {
     // Load characters for binding
     await characterStore.fetchCharacters(authStore.user.$id);
   }
+
+  // Connect to Colyseus room for real-time updates
+  try {
+    const hostUserId = sessionStore.session?.['hostUserId'] as string | undefined;
+    await joinSessionRoom(props.sessionId, {
+      onSessionStatus: (data) => {
+        sessionStatus.value = data.status;
+        if (data.status === 'active') {
+          // Session started — navigate to play view
+          router.push(`/app/sessions/${props.sessionId}/play`);
+        }
+      },
+      onPlayerJoined: (data) => {
+        const exists = livePlayers.value.find((p) => p.userId === data.userId);
+        if (!exists) {
+          livePlayers.value.push({ userId: data.userId, role: data.role, ready: false });
+        }
+      },
+      onPlayerLeft: (data) => {
+        livePlayers.value = livePlayers.value.filter((p) => p.userId !== data.userId);
+      },
+      onPlayerReady: (data) => {
+        const p = livePlayers.value.find((pl) => pl.userId === data.userId);
+        if (p) p.ready = data.ready;
+      },
+      onStartRejected: (data) => {
+        startError.value = data.reason;
+        setTimeout(() => { startError.value = null; }, 5000);
+      },
+      onError: (code, message) => {
+        connectionError.value = message ?? `Connection error (code: ${code})`;
+      },
+    }, hostUserId);
+    connectedToRoom.value = true;
+  } catch (e: unknown) {
+    connectionError.value = e instanceof Error ? e.message : 'Failed to connect to session room';
+  }
 });
 
-onUnmounted(() => {
+onUnmounted(async () => {
+  await leaveSessionRoom();
   sessionStore.clear();
 });
 
@@ -49,24 +108,53 @@ async function handleLeave() {
   }
 }
 
-async function handleToggleReady() {
-  await sessionStore.toggleReady();
+function handleToggleReady() {
+  // Send via Colyseus for real-time broadcast
+  sendToggleReady();
+  // Also update Appwrite for persistence
+  sessionStore.toggleReady();
 }
 
-async function handleBindCharacter(event: Event) {
+function handleBindCharacter(event: Event) {
   const select = event.target as HTMLSelectElement;
   const charId = select.value;
   if (charId) {
-    await sessionStore.bindCharacter(charId);
+    sendBindCharacter(charId);
+    sessionStore.bindCharacter(charId);
   }
 }
 
-async function handleStart() {
-  const ok = await sessionStore.startSession();
-  if (ok) {
-    router.push(`/app/sessions/${props.sessionId}/play`);
-  }
+function handleStart() {
+  startError.value = null;
+  // Send via Colyseus — the server will validate all-players-ready
+  // and broadcast sessionStatus 'active' which triggers navigation
+  sendStartSession();
 }
+
+// Merge Appwrite players with live Colyseus data
+const displayPlayers = computed(() => {
+  if (livePlayers.value.length > 0) {
+    // Use live data, enriched with Appwrite player info
+    return livePlayers.value.map((lp) => {
+      const awPlayer = sessionStore.players.find((p) => p.userId === lp.userId);
+      return {
+        userId: lp.userId,
+        role: lp.role,
+        ready: lp.ready,
+        characterId: awPlayer?.characterId ?? '',
+        $id: awPlayer?.$id ?? lp.userId,
+      };
+    });
+  }
+  // Fallback: Appwrite roster only
+  return sessionStore.players.map((p) => ({
+    userId: p.userId as string,
+    role: p.role as string,
+    ready: p.status === 'ready',
+    characterId: (p.characterId as string) ?? '',
+    $id: p.$id,
+  }));
+});
 </script>
 
 <template>
@@ -75,12 +163,13 @@ async function handleStart() {
       <div>
         <h1>{{ sessionStore.session?.title || 'Session Lobby' }}</h1>
         <div class="session-meta">
-          <span class="badge" :class="`badge-${sessionStore.session?.status}`">
-            {{ sessionStore.session?.status }}
+          <span class="badge" :class="`badge-${sessionStatus}`">
+            {{ sessionStatus }}
           </span>
           <span v-if="sessionStore.session?.textChatEnabled" class="feature">Text Chat</span>
           <span v-if="sessionStore.session?.voiceChatEnabled" class="feature">Voice Chat</span>
           <span>{{ sessionStore.session?.maxPlayers }} max players</span>
+          <span v-if="connectedToRoom" class="live-indicator">LIVE</span>
         </div>
       </div>
       <div class="lobby-actions">
@@ -97,7 +186,10 @@ async function handleStart() {
       </div>
     </div>
 
-    <div v-if="sessionStore.error" class="error">{{ sessionStore.error }}</div>
+    <div v-if="sessionStore.error || connectionError" class="error">
+      {{ sessionStore.error || connectionError }}
+    </div>
+    <div v-if="startError" class="error">{{ startError }}</div>
 
     <div v-if="sessionStore.loading" class="loading">Loading lobby...</div>
 
@@ -118,13 +210,13 @@ async function handleStart() {
       </div>
 
       <!-- Player roster -->
-      <h2>Players ({{ sessionStore.players.length }})</h2>
+      <h2>Players ({{ displayPlayers.length }})</h2>
       <div class="roster">
         <div
-          v-for="player in sessionStore.players"
+          v-for="player in displayPlayers"
           :key="player.$id"
           class="player-row"
-          :class="{ 'is-ready': player.status === 'ready' }"
+          :class="{ 'is-ready': player.ready }"
         >
           <div class="player-info">
             <span class="player-name">{{ player.userId }}</span>
@@ -132,11 +224,11 @@ async function handleStart() {
             <span v-if="player.characterId" class="player-char">Character bound</span>
           </div>
           <span class="ready-indicator">
-            {{ player.status === 'ready' ? 'Ready' : 'Not ready' }}
+            {{ player.ready ? 'Ready' : 'Not ready' }}
           </span>
         </div>
 
-        <div v-if="sessionStore.players.length === 0" class="empty">
+        <div v-if="displayPlayers.length === 0" class="empty">
           No players have joined yet.
         </div>
       </div>
@@ -168,6 +260,7 @@ async function handleStart() {
   text-transform: uppercase;
   font-weight: 600;
 }
+.badge-lobby { background: #2a2a4a; color: #a0a0ff; }
 .badge-open { background: #1a3a1a; color: #60c060; }
 .badge-active { background: #1a1a3a; color: #6080ff; }
 .badge-paused { background: #3a3a1a; color: #c0c060; }
@@ -178,6 +271,15 @@ async function handleStart() {
   border-radius: 4px;
   font-size: 0.7rem;
   color: #b0b0d0;
+}
+.live-indicator {
+  background: #1a3a1a;
+  color: #60c060;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 .lobby-actions {
   display: flex;

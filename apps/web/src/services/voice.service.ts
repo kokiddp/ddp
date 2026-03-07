@@ -24,12 +24,22 @@ export interface VoiceCallbacks {
  * Request a LiveKit token from the integration API.
  */
 async function getVoiceToken(sessionId: string): Promise<{ token: string; room: string }> {
-  const jwt = await account.createJWT();
+  const isDev = import.meta.env.DEV;
+
+  let body: Record<string, string>;
+  if (isDev) {
+    // Dev mode: pass userId directly (avoids JWT creation issues)
+    const user = await account.get();
+    body = { userId: user.$id, sessionId };
+  } else {
+    const jwt = await account.createJWT();
+    body = { jwt: jwt.jwt, sessionId };
+  }
 
   const response = await fetch(`${INTEGRATION_API_URL}/voice/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jwt: jwt.jwt, sessionId }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {

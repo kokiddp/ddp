@@ -99,6 +99,17 @@ export class SessionRoom extends Room<SessionState> {
       throw new Error('Not a member of this session');
     }
 
+    // Block new joins when session is active (allow reconnects by checking if already in room)
+    if (this.state.status === 'active') {
+      let alreadyInRoom = false;
+      this.state.players.forEach((p) => {
+        if (p.userId === userId) alreadyInRoom = true;
+      });
+      if (!alreadyInRoom) {
+        throw new Error('Session is already active — new players cannot join');
+      }
+    }
+
     return { userId, sessionId };
   }
 
@@ -138,6 +149,9 @@ export class SessionRoom extends Room<SessionState> {
 
     // Send current session status to the newly joined client
     client.send('sessionStatus', { status: this.state.status });
+
+    // Broadcast player join to all clients (including the new one)
+    this.broadcast('playerJoined', { userId, role: player.role });
   }
 
   async onLeave(client: Client, consented: boolean): Promise<void> {
@@ -152,6 +166,7 @@ export class SessionRoom extends Room<SessionState> {
       this.state.players.delete(client.sessionId);
       this.clientUserMap.delete(client.sessionId);
       log.info('Player left', { userId, roomId: this.roomId });
+      this.broadcast('playerLeft', { userId });
     } else {
       // Disconnected — allow reconnection for 60s
       try {
@@ -165,6 +180,7 @@ export class SessionRoom extends Room<SessionState> {
         this.state.players.delete(client.sessionId);
         this.clientUserMap.delete(client.sessionId);
         log.warn('Player reconnection timed out', { userId, roomId: this.roomId });
+        this.broadcast('playerLeft', { userId });
       }
     }
   }
@@ -228,6 +244,7 @@ export class SessionRoom extends Room<SessionState> {
       const player = this.state.players.get(client.sessionId);
       if (player) {
         player.ready = !player.ready;
+        this.broadcast('playerReady', { userId: player.userId, ready: player.ready });
       }
     });
 
@@ -242,6 +259,24 @@ export class SessionRoom extends Room<SessionState> {
     this.onMessage('startSession', (client) => {
       const player = this.state.players.get(client.sessionId);
       if (!player || player.role !== 'host') return;
+
+      // Check all non-host players are ready
+      let allReady = true;
+      let playerCount = 0;
+      this.state.players.forEach((p) => {
+        if (p.role !== 'host') {
+          playerCount++;
+          if (!p.ready) allReady = false;
+        }
+      });
+      if (!allReady || playerCount === 0) {
+        client.send('startRejected', {
+          reason: playerCount === 0
+            ? 'Cannot start without any players'
+            : 'All players must be ready before starting',
+        });
+        return;
+      }
 
       this.state.status = 'active';
       this.broadcast('sessionStatus', { status: 'active' });

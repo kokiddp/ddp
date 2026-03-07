@@ -34,6 +34,10 @@ export interface SessionRoomCallbacks {
     timestamp: string;
   }) => void;
   onActionRejected?: (reason: { reason: string }) => void;
+  onPlayerJoined?: (data: { userId: string; role: string }) => void;
+  onPlayerLeft?: (data: { userId: string }) => void;
+  onPlayerReady?: (data: { userId: string; ready: boolean }) => void;
+  onStartRejected?: (data: { reason: string }) => void;
   onError?: (code: number, message?: string) => void;
   onLeave?: (code: number) => void;
 }
@@ -44,6 +48,7 @@ export interface SessionRoomCallbacks {
 export async function joinSessionRoom(
   sessionId: string,
   callbacks?: SessionRoomCallbacks,
+  hostUserId?: string,
 ): Promise<Room> {
   await leaveSessionRoom();
 
@@ -53,11 +58,11 @@ export async function joinSessionRoom(
   if (isDev) {
     // Dev mode: pass userId directly
     const user = await account.get();
-    options = { sessionId, userId: user.$id };
+    options = { sessionId, userId: user.$id, hostUserId };
   } else {
     // Production: pass JWT
     const jwt = await account.createJWT();
-    options = { sessionId, jwt: jwt.jwt };
+    options = { sessionId, jwt: jwt.jwt, hostUserId };
   }
 
   const room = await client.joinOrCreate('session', options);
@@ -85,6 +90,22 @@ export async function joinSessionRoom(
 
   if (callbacks?.onActionRejected) {
     room.onMessage('actionRejected', callbacks.onActionRejected);
+  }
+
+  if (callbacks?.onPlayerJoined) {
+    room.onMessage('playerJoined', callbacks.onPlayerJoined);
+  }
+
+  if (callbacks?.onPlayerLeft) {
+    room.onMessage('playerLeft', callbacks.onPlayerLeft);
+  }
+
+  if (callbacks?.onPlayerReady) {
+    room.onMessage('playerReady', callbacks.onPlayerReady);
+  }
+
+  if (callbacks?.onStartRejected) {
+    room.onMessage('startRejected', callbacks.onStartRejected);
   }
 
   if (callbacks?.onError) {

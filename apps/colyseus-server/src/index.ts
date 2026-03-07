@@ -18,7 +18,7 @@ const gameServer = new Server({
   transport: new WebSocketTransport({ server: httpServer }),
 });
 
-gameServer.define('session', SessionRoom);
+gameServer.define('session', SessionRoom).filterBy(['sessionId']);
 
 httpServer.listen(port, () => {
   log.info('Colyseus server listening', { port });

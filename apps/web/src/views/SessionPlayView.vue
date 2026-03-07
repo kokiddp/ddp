@@ -63,6 +63,7 @@ onMounted(async () => {
   await sessionStore.loadSession(props.sessionId);
 
   try {
+    const hostUserId = sessionStore.session?.['hostUserId'] as string | undefined;
     await joinSessionRoom(props.sessionId, {
       onSessionStatus: (data) => {
         sessionStatus.value = data.status;
@@ -79,7 +80,7 @@ onMounted(async () => {
       onLeave: () => {
         connected.value = false;
       },
-    });
+    }, hostUserId);
 
     connected.value = true;
     sessionStatus.value = 'connected';

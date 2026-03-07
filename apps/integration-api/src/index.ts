@@ -63,12 +63,18 @@ async function isSessionMember(gameSessionId: string, userId: string): Promise<b
   return result.total > 0;
 }
 
+const IS_DEV = process.env.NODE_ENV === 'development';
+
 // ── Schemas ──
 
 const voiceTokenSchema = z.object({
-  jwt: z.string().min(1),
+  jwt: z.string().min(1).optional(),
+  userId: z.string().min(1).optional(),
   sessionId: z.string().min(1),
-});
+}).refine(
+  (data) => data.jwt || (IS_DEV && data.userId),
+  { message: 'jwt or userId (dev mode) required' },
+);
 
 // ── Routes ──
 
@@ -90,14 +96,21 @@ app.post('/voice/token', async (req, res) => {
       res.status(400).json({ error: 'Invalid request', details: parsed.error.issues });
       return;
     }
-    const { jwt, sessionId } = parsed.data;
+    const { jwt, userId: devUserId, sessionId } = parsed.data;
 
     // Verify identity
     let userId: string;
-    try {
-      userId = await verifyJwt(jwt);
-    } catch {
-      res.status(401).json({ error: 'Invalid authentication' });
+    if (jwt) {
+      try {
+        userId = await verifyJwt(jwt);
+      } catch {
+        res.status(401).json({ error: 'Invalid authentication' });
+        return;
+      }
+    } else if (IS_DEV && devUserId) {
+      userId = devUserId;
+    } else {
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 

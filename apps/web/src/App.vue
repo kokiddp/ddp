@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from './stores/useAuthStore.js';
 import { useRouter } from 'vue-router';
+import ErrorBoundary from './components/ErrorBoundary.vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -28,7 +29,9 @@ async function handleLogout() {
       </div>
     </header>
     <main class="app-main">
-      <router-view />
+      <ErrorBoundary>
+        <router-view />
+      </ErrorBoundary>
     </main>
   </div>
 </template>

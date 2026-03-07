@@ -135,6 +135,9 @@ export class SessionRoom extends Room<SessionState> {
 
     this.state.players.set(client.sessionId, player);
     log.info('Player joined', { userId, roomId: this.roomId });
+
+    // Send current session status to the newly joined client
+    client.send('sessionStatus', { status: this.state.status });
   }
 
   async onLeave(client: Client, consented: boolean): Promise<void> {
@@ -241,6 +244,7 @@ export class SessionRoom extends Room<SessionState> {
       if (!player || player.role !== 'host') return;
 
       this.state.status = 'active';
+      this.broadcast('sessionStatus', { status: 'active' });
 
       updateSessionStatus(this.state.sessionId, 'active').catch((err) =>
         log.error('Failed to update session status', { error: String(err) }),
@@ -259,6 +263,7 @@ export class SessionRoom extends Room<SessionState> {
       if (!player || player.role !== 'host') return;
 
       this.state.status = 'paused';
+      this.broadcast('sessionStatus', { status: 'paused' });
 
       updateSessionStatus(this.state.sessionId, 'paused').catch((err) =>
         log.error('Failed to pause session', { error: String(err) }),
@@ -274,6 +279,7 @@ export class SessionRoom extends Room<SessionState> {
       if (!player || player.role !== 'host') return;
 
       this.state.status = 'ended';
+      this.broadcast('sessionStatus', { status: 'ended' });
 
       updateSessionStatus(this.state.sessionId, 'ended').catch((err) =>
         log.error('Failed to end session', { error: String(err) }),

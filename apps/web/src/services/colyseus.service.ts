@@ -10,6 +10,7 @@ let currentRoom: Room | null = null;
 
 export interface SessionRoomCallbacks {
   onStateChange?: (state: Record<string, unknown>) => void;
+  onSessionStatus?: (data: { status: string }) => void;
   onTextMessage?: (msg: {
     gameSessionId: string;
     senderUserId: string;
@@ -64,6 +65,10 @@ export async function joinSessionRoom(
 
   if (callbacks?.onStateChange) {
     room.onStateChange(callbacks.onStateChange as (state: unknown) => void);
+  }
+
+  if (callbacks?.onSessionStatus) {
+    room.onMessage('sessionStatus', callbacks.onSessionStatus);
   }
 
   if (callbacks?.onTextMessage) {

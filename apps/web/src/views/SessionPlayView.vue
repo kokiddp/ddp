@@ -64,11 +64,8 @@ onMounted(async () => {
 
   try {
     await joinSessionRoom(props.sessionId, {
-      onStateChange: (state) => {
-        const s = state as Record<string, unknown>;
-        if (typeof s.status === 'string') {
-          sessionStatus.value = s.status;
-        }
+      onSessionStatus: (data) => {
+        sessionStatus.value = data.status;
       },
       onTextMessage: (msg) => {
         chatStore.addMessage(mapTextMessage(msg));

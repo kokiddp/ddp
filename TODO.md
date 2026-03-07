@@ -97,7 +97,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Add `pnpm test`
 - [x] Add `pnpm format`
 - [x] Add `pnpm build`
-- [ ] Add health-check documentation
+- [x] Add health-check documentation
 
 ---
 
@@ -131,8 +131,8 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Define matching domain events
 
 ### Validation
-- [ ] Choose runtime validation strategy (`zod`, `valibot`, or equivalent)
-- [ ] Implement shared schema definitions for external inputs
+- [x] Choose runtime validation strategy (`zod`, `valibot`, or equivalent)
+- [x] Implement shared schema definitions for external inputs
 - [ ] Define mapping rules between raw persistence documents and domain models
 
 ---
@@ -284,7 +284,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Configure room registry
 - [x] Create base `SessionRoom`
 - [x] Add health endpoint or diagnostics
-- [ ] Add structured logging
+- [x] Add structured logging
 
 ### Join authorization
 - [x] Define join handshake contract
@@ -325,11 +325,11 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Define message length and rate limits
 
 ### Client features
-- [ ] Create session text chat panel
+- [x] Create session text chat panel
 - [x] Load chat history for session
 - [x] Subscribe to realtime new-message updates
 - [x] Send text messages
-- [ ] Display system messages distinctly
+- [x] Display system messages distinctly
 - [ ] Handle disabled-text-chat sessions gracefully
 
 ### Integration points
@@ -403,7 +403,7 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 - [x] Define plugin or module loading strategy for future rulesets
 - [x] Decide whether rules packages live inside monorepo initially
 - [x] Define how a rules profile activates specific rule handlers
-- [ ] Document boundary between core protocol and custom campaign logic
+- [x] Document boundary between core protocol and custom campaign logic
 
 ### Important guardrails
 - [x] Do not bake setting-specific terms into core protocol
@@ -454,12 +454,12 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 ## 16. Observability and diagnostics
 
 ### Logging
-- [ ] Define structured logging format for server apps
+- [x] Define structured logging format for server apps
 - [ ] Add correlation ids where sensible
-- [ ] Define log levels and defaults
+- [x] Define log levels and defaults
 
 ### Monitoring
-- [ ] Add health endpoints for services
+- [x] Add health endpoints for services
 - [ ] Define minimum runtime metrics worth collecting
 - [ ] Consider room count / connection count diagnostics
 
@@ -485,8 +485,8 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 
 ### Integration tests
 - [x] Test auth bootstrap flow
-- [ ] Test session creation flow
-- [ ] Test lobby join/leave flow
+- [x] Test session creation flow
+- [x] Test lobby join/leave flow
 - [ ] Test room authorization flow
 - [ ] Test snapshot load/save flow
 - [ ] Test LiveKit token authorization logic
@@ -504,7 +504,7 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 - [ ] Audit secret placement
 - [ ] Audit token issuance flows
 - [ ] Add rate limiting where relevant
-- [ ] Add validation for all external inputs
+- [x] Add validation for all external inputs
 - [ ] Sanitize rendered user-generated text
 
 ### Moderation readiness
@@ -578,11 +578,11 @@ This is the recommended execution sequence for development.
 ### Phase F — protocol framework maturation
 - [x] shared-rules package expansion
 - [x] rules-profile strategy
-- [ ] extensibility docs and examples
+- [x] extensibility docs and examples
 
 ### Phase G — hardening
 - [~] tests
-- [ ] observability
+- [x] observability
 - [ ] mobile polish
 - [ ] deployment documentation
 

@@ -478,9 +478,9 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 - [ ] Choose integration/e2e strategy
 
 ### Unit tests
-- [ ] Test shared model mapping and validation
-- [ ] Test command schema validation
-- [ ] Test protocol helper logic
+- [x] Test shared model mapping and validation
+- [x] Test command schema validation
+- [x] Test protocol helper logic
 - [ ] Test store logic for session/chat/voice state
 
 ### Integration tests
@@ -581,7 +581,7 @@ This is the recommended execution sequence for development.
 - [ ] extensibility docs and examples
 
 ### Phase G — hardening
-- [ ] tests
+- [~] tests
 - [ ] observability
 - [ ] mobile polish
 - [ ] deployment documentation

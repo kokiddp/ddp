@@ -25,6 +25,8 @@ import {
   type RuleHandler,
   type ActionProposal,
   type ActionContext,
+  TriggerRegistry,
+  type TriggerDefinition,
 } from '@ddp/shared-rules';
 
 // ── Test helpers ──
@@ -412,5 +414,105 @@ describe('Rules profile registry', () => {
 
     const registry = createRegistryFromProfile('with-handlers');
     expect(registry.getHandler('test-action')).toBe(handler);
+  });
+});
+
+// ── Event triggers ──
+
+describe('TriggerRegistry', () => {
+  const knockoutTrigger: TriggerDefinition = {
+    id: 'knockout',
+    name: 'Knockout on zero HP',
+    event: 'resourceChanged',
+    condition: (actor) => {
+      const hp = actor.resources.hp;
+      return hp !== undefined && hp.current <= 0;
+    },
+    effects: (actor) => [
+      {
+        targetActorId: actor.id,
+        effectType: 'addStatus',
+        params: {
+          status: { id: 'unconscious', name: 'Unconscious', kind: 'condition', remainingRounds: null, metadata: {} },
+        },
+      },
+    ],
+  };
+
+  it('registers and retrieves triggers by event', () => {
+    const registry = new TriggerRegistry();
+    registry.register(knockoutTrigger);
+
+    expect(registry.getTriggersForEvent('resourceChanged')).toHaveLength(1);
+    expect(registry.getTriggersForEvent('statusAdded')).toHaveLength(0);
+  });
+
+  it('unregisters a trigger', () => {
+    const registry = new TriggerRegistry();
+    registry.register(knockoutTrigger);
+    registry.unregister('knockout');
+
+    expect(registry.getTriggersForEvent('resourceChanged')).toHaveLength(0);
+  });
+
+  it('evaluates triggers and returns effects when condition is met', () => {
+    const registry = new TriggerRegistry();
+    registry.register(knockoutTrigger);
+
+    const actor = makeActor({
+      resources: { hp: createResource('hp', 'HP', 0, 20) },
+    });
+
+    const effects = registry.evaluate('resourceChanged', actor, makeContext(), {
+      changedResourceId: 'hp',
+    });
+
+    expect(effects).toHaveLength(1);
+    expect(effects[0].effectType).toBe('addStatus');
+  });
+
+  it('returns no effects when condition is not met', () => {
+    const registry = new TriggerRegistry();
+    registry.register(knockoutTrigger);
+
+    const actor = makeActor({
+      resources: { hp: createResource('hp', 'HP', 10, 20) },
+    });
+
+    const effects = registry.evaluate('resourceChanged', actor, makeContext(), {
+      changedResourceId: 'hp',
+    });
+
+    expect(effects).toHaveLength(0);
+  });
+
+  it('evaluates multiple triggers', () => {
+    const registry = new TriggerRegistry();
+    registry.register(knockoutTrigger);
+    registry.register({
+      id: 'death-save',
+      name: 'Death save prompt',
+      event: 'resourceChanged',
+      condition: (actor) => {
+        const hp = actor.resources.hp;
+        return hp !== undefined && hp.current <= 0;
+      },
+      effects: (actor) => [
+        {
+          targetActorId: actor.id,
+          effectType: 'addStatus',
+          params: {
+            status: { id: 'death-save', name: 'Death Save', kind: 'condition', remainingRounds: 3, metadata: {} },
+          },
+        },
+      ],
+    });
+
+    const actor = makeActor({
+      resources: { hp: createResource('hp', 'HP', 0, 20) },
+    });
+
+    const effects = registry.evaluate('resourceChanged', actor, makeContext());
+    expect(effects).toHaveLength(2);
   });
 });

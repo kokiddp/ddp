@@ -239,7 +239,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Define status abstraction
 - [x] Define scene abstraction
 - [x] Define timeline/turn abstraction
-- [ ] Define trigger abstraction
+- [x] Define trigger abstraction
 
 ---
 
@@ -397,7 +397,7 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 - [x] Create status effect lifecycle helpers
 - [x] Create scene transition helpers
 - [x] Create turn/timeline helpers
-- [ ] Create event trigger helpers
+- [x] Create event trigger helpers
 
 ### Extensibility strategy
 - [x] Define plugin or module loading strategy for future rulesets

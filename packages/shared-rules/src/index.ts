@@ -54,3 +54,11 @@ export {
   listProfileDefinitions,
   createRegistryFromProfile,
 } from './rules-profile.js';
+
+// Event triggers
+export {
+  type TriggerEvent,
+  type TriggerDefinition,
+  type TriggerContext,
+  TriggerRegistry,
+} from './trigger.js';

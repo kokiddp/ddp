@@ -48,6 +48,8 @@ export type {
   BindCharacterToSessionCommand,
   ToggleReadyCommand,
   SendTextMessageCommand,
+  JoinVoiceCommand,
+  LeaveVoiceCommand,
   SubmitActionCommand,
   DdpCommand,
 } from './commands.js';

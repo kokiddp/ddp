@@ -71,6 +71,22 @@ export type SendTextMessageCommand = CommandEnvelope<
   }
 >;
 
+// --- Voice commands ---
+
+export type JoinVoiceCommand = CommandEnvelope<
+  'JoinVoice',
+  {
+    gameSessionId: GameSessionId;
+  }
+>;
+
+export type LeaveVoiceCommand = CommandEnvelope<
+  'LeaveVoice',
+  {
+    gameSessionId: GameSessionId;
+  }
+>;
+
 // --- Action commands ---
 
 export type SubmitActionCommand = CommandEnvelope<
@@ -91,4 +107,6 @@ export type DdpCommand =
   | BindCharacterToSessionCommand
   | ToggleReadyCommand
   | SendTextMessageCommand
+  | JoinVoiceCommand
+  | LeaveVoiceCommand
   | SubmitActionCommand;

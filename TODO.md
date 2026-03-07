@@ -126,8 +126,8 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Define `ToggleReadyCommand`
 - [x] Define `SendTextMessageCommand`
 - [x] Define `SubmitActionCommand`
-- [ ] Define `JoinVoiceCommand` semantic contract
-- [ ] Define `LeaveVoiceCommand` semantic contract
+- [x] Define `JoinVoiceCommand` semantic contract
+- [x] Define `LeaveVoiceCommand` semantic contract
 - [x] Define matching domain events
 
 ### Validation

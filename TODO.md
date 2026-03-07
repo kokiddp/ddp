@@ -287,9 +287,9 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [ ] Add structured logging
 
 ### Join authorization
-- [ ] Define join handshake contract
-- [ ] Verify authenticated identity before room join
-- [ ] Verify session membership before room join
+- [x] Define join handshake contract
+- [x] Verify authenticated identity before room join
+- [x] Verify session membership before room join
 - [ ] Document how Appwrite identity maps into room auth
 
 ### Runtime state
@@ -298,20 +298,20 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Define selected-character state
 - [x] Define readiness state
 - [ ] Define generic protocol/session context state
-- [ ] Define versioning strategy for runtime state
+- [x] Define versioning strategy for runtime state
 
 ### Action handling
-- [ ] Define message/command registry for room actions
-- [ ] Implement command parser and validation layer
-- [ ] Implement generic action rejection flow
-- [ ] Implement state patch broadcasting strategy
-- [ ] Implement reconnect logic
+- [x] Define message/command registry for room actions
+- [x] Implement command parser and validation layer
+- [x] Implement generic action rejection flow
+- [x] Implement state patch broadcasting strategy
+- [x] Implement reconnect logic
 
 ### Persistence bridging
-- [ ] Load latest snapshot on room bootstrap
-- [ ] Define checkpoint policy
-- [ ] Persist milestone snapshots to Appwrite
-- [ ] Persist end-of-session snapshot
+- [x] Load latest snapshot on room bootstrap
+- [x] Define checkpoint policy
+- [x] Persist milestone snapshots to Appwrite
+- [x] Persist end-of-session snapshot
 - [ ] Persist major system events if needed
 
 ---
@@ -565,10 +565,10 @@ This is the recommended execution sequence for development.
 - [x] communication settings on session creation
 
 ### Phase D — active runtime
-- [ ] room authorization
-- [ ] room state bootstrap
-- [ ] authoritative actions
-- [ ] snapshot persistence
+- [x] room authorization
+- [x] room state bootstrap
+- [x] authoritative actions
+- [x] snapshot persistence
 
 ### Phase E — communications
 - [ ] text chat

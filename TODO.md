@@ -246,28 +246,28 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 8. Session metadata, discovery, and lobby
 
 ### Session CRUD
-- [ ] Create session list/discovery page
-- [ ] Create session creation form
+- [x] Create session list/discovery page
+- [x] Create session creation form
 - [ ] Create session edit/cancel flow
 - [x] Define session status lifecycle (`draft`, `open`, `active`, `paused`, `ended`, etc.)
 
 ### Session configuration
-- [ ] Add session title and description fields
-- [ ] Add max players setting
+- [x] Add session title and description fields
+- [x] Add max players setting
 - [ ] Add campaign association setting
 - [ ] Add rules profile setting
-- [ ] Add text chat enabled toggle
-- [ ] Add voice chat enabled toggle
+- [x] Add text chat enabled toggle
+- [x] Add voice chat enabled toggle
 - [ ] Add scheduling metadata if desired
 
 ### Lobby UX
-- [ ] Create session lobby page
-- [ ] Show roster of joined players
-- [ ] Show selected characters
-- [ ] Show ready states
-- [ ] Show communication capabilities
-- [ ] Implement join/leave lobby actions
-- [ ] Implement host controls for starting session
+- [x] Create session lobby page
+- [x] Show roster of joined players
+- [x] Show selected characters
+- [x] Show ready states
+- [x] Show communication capabilities
+- [x] Implement join/leave lobby actions
+- [x] Implement host controls for starting session
 
 ### Membership rules
 - [ ] Define open vs invite-only session model
@@ -560,9 +560,9 @@ This is the recommended execution sequence for development.
 - [x] campaign CRUD basics
 
 ### Phase C — session metadata and lobby
-- [ ] create/list/join sessions
-- [ ] lobby roster and ready state
-- [ ] communication settings on session creation
+- [x] create/list/join sessions
+- [x] lobby roster and ready state
+- [x] communication settings on session creation
 
 ### Phase D — active runtime
 - [ ] room authorization
@@ -650,8 +650,8 @@ That is enough to prove DDP is a real framework and not just a handsome pile of 
 ### Immediately after that
 - [x] Implement authentication
 - [x] Implement character CRUD
-- [~] Implement session creation and listing
-- [ ] Implement lobby join flow
+- [x] Implement session creation and listing
+- [x] Implement lobby join flow
 
 ---
 

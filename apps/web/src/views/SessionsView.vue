@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import type { Models } from 'appwrite';
 import { useAuthStore } from '../stores/useAuthStore.js';
 import { useSessionListStore } from '../stores/useSessionListStore.js';
 
@@ -46,8 +47,56 @@ function goToLobby(sessionId: string) {
   router.push(`/app/sessions/${sessionId}/lobby`);
 }
 
+const editingSessionId = ref<string | null>(null);
+const editForm = ref({
+  title: '',
+  textChatEnabled: true,
+  voiceChatEnabled: false,
+  maxPlayers: 6,
+});
+
 function statusBadgeClass(status: string) {
   return `badge badge-${status}`;
+}
+
+function isOwnSession(session: Models.Document) {
+  return authStore.user && session['hostUserId'] === authStore.user.$id;
+}
+
+function canEdit(session: Models.Document) {
+  return isOwnSession(session) && (session['status'] === 'open' || session['status'] === 'draft');
+}
+
+function startEdit(session: Models.Document) {
+  editingSessionId.value = session.$id;
+  editForm.value = {
+    title: session['title'] as string,
+    textChatEnabled: session['textChatEnabled'] as boolean,
+    voiceChatEnabled: session['voiceChatEnabled'] as boolean,
+    maxPlayers: session['maxPlayers'] as number,
+  };
+}
+
+function cancelEdit() {
+  editingSessionId.value = null;
+}
+
+async function handleEdit() {
+  if (!editingSessionId.value) return;
+  const updated = await sessionStore.editSession(editingSessionId.value, {
+    title: editForm.value.title,
+    textChatEnabled: editForm.value.textChatEnabled,
+    voiceChatEnabled: editForm.value.voiceChatEnabled,
+    maxPlayers: editForm.value.maxPlayers,
+  });
+  if (updated) {
+    editingSessionId.value = null;
+  }
+}
+
+async function handleCancel(sessionId: string) {
+  if (!confirm('Are you sure you want to cancel this session?')) return;
+  await sessionStore.cancelSession(sessionId);
 }
 </script>
 
@@ -99,9 +148,35 @@ function statusBadgeClass(status: string) {
         v-for="session in sessionStore.sessions"
         :key="session.$id"
         class="session-card"
-        @click="goToLobby(session.$id)"
       >
-        <div class="session-info">
+        <!-- Edit mode -->
+        <div v-if="editingSessionId === session.$id" class="edit-form">
+          <form @submit.prevent="handleEdit">
+            <div class="field">
+              <input v-model="editForm.title" type="text" required placeholder="Session title" />
+            </div>
+            <div class="field">
+              <input v-model.number="editForm.maxPlayers" type="number" min="2" max="20" />
+            </div>
+            <div class="field-row">
+              <label class="checkbox-label">
+                <input v-model="editForm.textChatEnabled" type="checkbox" />
+                Text Chat
+              </label>
+              <label class="checkbox-label">
+                <input v-model="editForm.voiceChatEnabled" type="checkbox" />
+                Voice Chat
+              </label>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary btn-sm">Save</button>
+              <button type="button" class="btn-secondary btn-sm" @click="cancelEdit">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Display mode -->
+        <div v-else class="session-info" @click="goToLobby(session.$id)">
           <h3>{{ session.title }}</h3>
           <div class="session-meta">
             <span :class="statusBadgeClass(session.status)">{{ session.status }}</span>
@@ -109,6 +184,11 @@ function statusBadgeClass(status: string) {
             <span v-if="session.textChatEnabled" class="feature">Text</span>
             <span v-if="session.voiceChatEnabled" class="feature">Voice</span>
           </div>
+        </div>
+
+        <div v-if="canEdit(session) && editingSessionId !== session.$id" class="session-actions">
+          <button class="btn-sm btn-secondary" @click.stop="startEdit(session)">Edit</button>
+          <button class="btn-sm btn-danger" @click.stop="handleCancel(session.$id)">Cancel</button>
         </div>
       </div>
     </div>
@@ -265,5 +345,46 @@ function statusBadgeClass(status: string) {
 }
 .btn-secondary:hover {
   border-color: #6060a0;
+}
+.btn-sm {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+}
+.btn-danger {
+  padding: 0.5rem 1rem;
+  background: #a04040;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-danger:hover {
+  background: #c05050;
+}
+.session-card {
+  position: relative;
+}
+.session-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #2a2a3e;
+}
+.edit-form {
+  padding: 0.5rem 0;
+}
+.edit-form .field {
+  margin-bottom: 0.75rem;
+}
+.edit-form .field input[type="text"],
+.edit-form .field input[type="number"] {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  background: #0f0f1a;
+  border: 1px solid #3a3a4e;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-size: 0.9rem;
 }
 </style>

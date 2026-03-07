@@ -248,7 +248,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ### Session CRUD
 - [x] Create session list/discovery page
 - [x] Create session creation form
-- [ ] Create session edit/cancel flow
+- [x] Create session edit/cancel flow
 - [x] Define session status lifecycle (`draft`, `open`, `active`, `paused`, `ended`, etc.)
 
 ### Session configuration

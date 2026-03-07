@@ -1,6 +1,7 @@
 import express from 'express';
 import { AccessToken } from 'livekit-server-sdk';
 import { Client, Databases, Query } from 'node-appwrite';
+import { z } from 'zod';
 import { log } from './logger.js';
 
 const app = express();
@@ -62,6 +63,13 @@ async function isSessionMember(gameSessionId: string, userId: string): Promise<b
   return result.total > 0;
 }
 
+// ── Schemas ──
+
+const voiceTokenSchema = z.object({
+  jwt: z.string().min(1),
+  sessionId: z.string().min(1),
+});
+
 // ── Routes ──
 
 app.get('/health', (_req, res) => {
@@ -77,12 +85,12 @@ app.get('/health', (_req, res) => {
  */
 app.post('/voice/token', async (req, res) => {
   try {
-    const { jwt, sessionId } = req.body as { jwt?: string; sessionId?: string };
-
-    if (!jwt || !sessionId) {
-      res.status(400).json({ error: 'Missing jwt or sessionId' });
+    const parsed = voiceTokenSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid request', details: parsed.error.issues });
       return;
     }
+    const { jwt, sessionId } = parsed.data;
 
     // Verify identity
     let userId: string;

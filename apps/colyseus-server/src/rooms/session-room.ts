@@ -12,6 +12,23 @@ import {
   getTextMessages,
 } from '../appwrite.js';
 import { log } from '../logger.js';
+import { z } from 'zod';
+
+// ── Message schemas ──
+
+const bindCharacterSchema = z.object({
+  characterId: z.string().min(1),
+});
+
+const submitActionSchema = z.object({
+  actionType: z.string().min(1),
+  actionPayload: z.record(z.string(), z.unknown()).default({}),
+});
+
+const sendTextMessageSchema = z.object({
+  body: z.string().min(1).max(5000),
+  senderCharacterId: z.string().optional(),
+});
 
 // ── State schemas ──
 
@@ -211,11 +228,12 @@ export class SessionRoom extends Room<SessionState> {
       }
     });
 
-    this.onMessage('bindCharacter', (client, message: { characterId: string }) => {
+    this.onMessage('bindCharacter', (client, message: unknown) => {
       const player = this.state.players.get(client.sessionId);
-      if (player && typeof message?.characterId === 'string') {
-        player.characterId = message.characterId;
-      }
+      if (!player) return;
+      const parsed = bindCharacterSchema.safeParse(message);
+      if (!parsed.success) return;
+      player.characterId = parsed.data.characterId;
     });
 
     this.onMessage('startSession', (client) => {
@@ -266,7 +284,7 @@ export class SessionRoom extends Room<SessionState> {
         .finally(() => this.disconnect());
     });
 
-    this.onMessage('submitAction', (client, message: { actionType: string; actionPayload: Record<string, unknown> }) => {
+    this.onMessage('submitAction', (client, message: unknown) => {
       const player = this.state.players.get(client.sessionId);
       if (!player) return;
 
@@ -275,7 +293,8 @@ export class SessionRoom extends Room<SessionState> {
         return;
       }
 
-      if (!message?.actionType || typeof message.actionType !== 'string') {
+      const parsed = submitActionSchema.safeParse(message);
+      if (!parsed.success) {
         client.send('actionRejected', { reason: 'Invalid action' });
         return;
       }
@@ -284,8 +303,8 @@ export class SessionRoom extends Room<SessionState> {
       // The shared-rules package will eventually process these authoritatively.
       this.broadcast('actionApplied', {
         userId: player.userId,
-        actionType: message.actionType,
-        actionPayload: message.actionPayload ?? {},
+        actionType: parsed.data.actionType,
+        actionPayload: parsed.data.actionPayload,
         timestamp: new Date().toISOString(),
       });
     });
@@ -301,24 +320,21 @@ export class SessionRoom extends Room<SessionState> {
 
     // ── Text chat ──
 
-    this.onMessage('sendTextMessage', (client, message: { body: string; senderCharacterId?: string }) => {
+    this.onMessage('sendTextMessage', (client, message: unknown) => {
       const player = this.state.players.get(client.sessionId);
       if (!player) return;
 
-      if (!message?.body || typeof message.body !== 'string' || message.body.length === 0) {
-        return;
-      }
+      const parsed = sendTextMessageSchema.safeParse(message);
+      if (!parsed.success) return;
 
-      // Enforce max length
-      const body = message.body.slice(0, 5000);
       const timestamp = new Date().toISOString();
 
       const textMsg = {
         gameSessionId: this.state.sessionId,
         senderUserId: player.userId,
-        senderCharacterId: message.senderCharacterId ?? null,
+        senderCharacterId: parsed.data.senderCharacterId ?? null,
         kind: 'user' as const,
-        body,
+        body: parsed.data.body,
         createdAt: timestamp,
       };
 

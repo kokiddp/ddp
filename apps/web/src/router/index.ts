@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import DashboardView from '../views/DashboardView.vue';
+import { useAuthStore } from '../stores/useAuthStore.js';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -15,11 +16,13 @@ export const router = createRouter({
           path: 'login',
           name: 'Login',
           component: () => import('../views/auth/LoginView.vue'),
+          meta: { public: true },
         },
         {
           path: 'register',
           name: 'Register',
           component: () => import('../views/auth/RegisterView.vue'),
+          meta: { public: true },
         },
       ],
     },
@@ -30,6 +33,11 @@ export const router = createRouter({
           path: 'dashboard',
           name: 'Dashboard',
           component: DashboardView,
+        },
+        {
+          path: 'profile',
+          name: 'Profile',
+          component: () => import('../views/ProfileView.vue'),
         },
         {
           path: 'characters',
@@ -61,4 +69,24 @@ export const router = createRouter({
       ],
     },
   ],
+});
+
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore();
+
+  // Initialize auth state on first navigation if not done yet
+  if (authStore.user === null && !authStore.loading) {
+    await authStore.init();
+  }
+
+  const isPublic = to.meta.public === true;
+
+  if (!isPublic && !authStore.isAuthenticated) {
+    return { name: 'Login' };
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (isPublic && authStore.isAuthenticated) {
+    return { name: 'Dashboard' };
+  }
 });

@@ -22,52 +22,52 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 0. Project governance and bootstrap
 
 ### Identity and legal
-- [ ] Confirm project name everywhere as **Dynamic Destiny Protocol (DDP)**
-- [ ] Confirm copyright holder / maintainer metadata as **ELK-Lab**
-- [ ] Add `LICENSE` file with MIT license
+- [x] Confirm project name everywhere as **Dynamic Destiny Protocol (DDP)**
+- [x] Confirm copyright holder / maintainer metadata as **ELK-Lab**
+- [x] Add `LICENSE` file with MIT license
 - [ ] Verify dependency license compatibility and record findings in docs
 - [ ] Create `CONTRIBUTING.md`
 - [ ] Create `CODE_OF_CONDUCT.md`
 
 ### Repository bootstrap
-- [ ] Initialize monorepo with `pnpm`
-- [ ] Create root `package.json`
-- [ ] Create `pnpm-workspace.yaml`
-- [ ] Configure TypeScript project references if adopted
-- [ ] Configure root `.editorconfig`
-- [ ] Configure root `.gitignore`
-- [ ] Configure root `.nvmrc` or toolchain version policy
-- [ ] Configure shared ESLint setup
-- [ ] Configure Prettier
+- [x] Initialize monorepo with `pnpm`
+- [x] Create root `package.json`
+- [x] Create `pnpm-workspace.yaml`
+- [x] Configure TypeScript project references if adopted
+- [x] Configure root `.editorconfig`
+- [x] Configure root `.gitignore`
+- [x] Configure root `.nvmrc` or toolchain version policy
+- [x] Configure shared ESLint setup
+- [x] Configure Prettier
 - [ ] Configure commit message convention
 - [ ] Configure CI pipeline for lint + typecheck + tests
 
 ### Initial repository structure
-- [ ] Create `apps/web`
-- [ ] Create `apps/colyseus-server`
-- [ ] Create `apps/integration-api`
-- [ ] Create `packages/shared-types`
-- [ ] Create `packages/shared-rules`
-- [ ] Create `packages/sdk-client`
-- [ ] Create `packages/ui-kit`
-- [ ] Create `infra/compose`
-- [ ] Create `docs/architecture`
-- [ ] Create `docs/adr`
-- [ ] Create `docs/protocol`
-- [ ] Create `docs/api`
+- [x] Create `apps/web`
+- [x] Create `apps/colyseus-server`
+- [x] Create `apps/integration-api`
+- [x] Create `packages/shared-types`
+- [x] Create `packages/shared-rules`
+- [x] Create `packages/sdk-client`
+- [x] Create `packages/ui-kit`
+- [x] Create `infra/compose`
+- [x] Create `docs/architecture`
+- [x] Create `docs/adr`
+- [x] Create `docs/protocol`
+- [x] Create `docs/api`
 
 ---
 
 ## 1. Architecture decisions to formalize
 
-- [ ] ADR: choose Vue 3 + Vite + TypeScript for primary client
-- [ ] ADR: choose Capacitor for Android/iOS distribution
-- [ ] ADR: choose Appwrite for self-hosted auth/persistence
-- [ ] ADR: choose Colyseus for authoritative live session engine
-- [ ] ADR: choose LiveKit for optional voice subsystem
-- [ ] ADR: define monorepo boundaries and shared-package strategy
+- [x] ADR: choose Vue 3 + Vite + TypeScript for primary client (`docs/adr/0001-adopt-vue-capacitor.md`)
+- [x] ADR: choose Capacitor for Android/iOS distribution (`docs/adr/0001-adopt-vue-capacitor.md`)
+- [x] ADR: choose Appwrite for self-hosted auth/persistence (`docs/adr/0002-use-appwrite-for-persistence.md`)
+- [x] ADR: choose Colyseus for authoritative live session engine (`docs/adr/0003-use-colyseus-for-session-state.md`)
+- [x] ADR: choose LiveKit for optional voice subsystem (`docs/adr/0004-use-livekit-for-voice.md`)
+- [x] ADR: define monorepo boundaries and shared-package strategy (`docs/adr/0005-monorepo-with-pnpm-workspaces.md`)
 - [ ] ADR: define persistence vs live-state boundary
-- [ ] ADR: define command/event modeling strategy
+- [x] ADR: define command/event modeling strategy (`docs/adr/0006-command-event-modeling.md`)
 - [ ] ADR: define session snapshot strategy
 - [ ] ADR: define token issuance strategy for voice and live session authorization
 
@@ -76,27 +76,27 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 2. Local infrastructure and developer environment
 
 ### Docker Compose setup
-- [ ] Create Docker Compose stack for Appwrite
-- [ ] Create Docker Compose stack for LiveKit
+- [x] Create Docker Compose stack for Appwrite
+- [x] Create Docker Compose stack for LiveKit
 - [ ] Create Docker Compose stack for supporting reverse proxy if needed
-- [ ] Provide local hostnames or ports convention
+- [x] Provide local hostnames or ports convention
 - [ ] Create bootstrap scripts for local development
 - [ ] Document startup order and troubleshooting steps
 
 ### Environment management
-- [ ] Define `.env.example` for root-level shared variables
-- [ ] Define `apps/web/.env.example`
-- [ ] Define `apps/colyseus-server/.env.example`
-- [ ] Define `apps/integration-api/.env.example`
+- [x] Define `.env.example` for root-level shared variables
+- [x] Define `apps/web/.env.example`
+- [x] Define `apps/colyseus-server/.env.example`
+- [x] Define `apps/integration-api/.env.example`
 - [ ] Document secret management strategy for local/dev/prod
 
 ### Dev experience
-- [ ] Add `pnpm dev` orchestration script
-- [ ] Add `pnpm lint`
-- [ ] Add `pnpm typecheck`
-- [ ] Add `pnpm test`
-- [ ] Add `pnpm format`
-- [ ] Add `pnpm build`
+- [x] Add `pnpm dev` orchestration script
+- [x] Add `pnpm lint`
+- [x] Add `pnpm typecheck`
+- [x] Add `pnpm test`
+- [x] Add `pnpm format`
+- [x] Add `pnpm build`
 - [ ] Add health-check documentation
 
 ---
@@ -104,31 +104,31 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 3. Shared contracts and protocol primitives
 
 ### Shared types package
-- [ ] Define ID types and identity helpers
-- [ ] Define `User` model contracts
-- [ ] Define `Character` model contracts
-- [ ] Define `Campaign` model contracts
-- [ ] Define `GameSession` model contracts
-- [ ] Define `GamePlayer` model contracts
-- [ ] Define `TextMessage` model contracts
-- [ ] Define `SessionSnapshot` model contracts
-- [ ] Define `RulesProfile` model contracts
-- [ ] Define `GameCommunicationSettings`
-- [ ] Define `PlayerCommunicationState`
+- [x] Define ID types and identity helpers
+- [x] Define `User` model contracts
+- [x] Define `Character` model contracts
+- [x] Define `Campaign` model contracts
+- [x] Define `GameSession` model contracts
+- [x] Define `GamePlayer` model contracts
+- [x] Define `TextMessage` model contracts
+- [x] Define `SessionSnapshot` model contracts
+- [x] Define `RulesProfile` model contracts
+- [x] Define `GameCommunicationSettings`
+- [x] Define `PlayerCommunicationState`
 
 ### Commands and events
-- [ ] Define command envelope shape
-- [ ] Define event envelope shape
-- [ ] Define `CreateSessionCommand`
-- [ ] Define `JoinSessionCommand`
-- [ ] Define `LeaveSessionCommand`
-- [ ] Define `BindCharacterToSessionCommand`
-- [ ] Define `ToggleReadyCommand`
-- [ ] Define `SendTextMessageCommand`
-- [ ] Define `SubmitActionCommand`
+- [x] Define command envelope shape
+- [x] Define event envelope shape
+- [x] Define `CreateSessionCommand`
+- [x] Define `JoinSessionCommand`
+- [x] Define `LeaveSessionCommand`
+- [x] Define `BindCharacterToSessionCommand`
+- [x] Define `ToggleReadyCommand`
+- [x] Define `SendTextMessageCommand`
+- [x] Define `SubmitActionCommand`
 - [ ] Define `JoinVoiceCommand` semantic contract
 - [ ] Define `LeaveVoiceCommand` semantic contract
-- [ ] Define matching domain events
+- [x] Define matching domain events
 
 ### Validation
 - [ ] Choose runtime validation strategy (`zod`, `valibot`, or equivalent)
@@ -140,11 +140,11 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 4. Web client foundation
 
 ### Core app scaffold
-- [ ] Scaffold Vue 3 app with TypeScript and Vite
-- [ ] Configure Vue Router
-- [ ] Configure Pinia
-- [ ] Configure basic app layout shell
-- [ ] Configure route guards for authenticated areas
+- [x] Scaffold Vue 3 app with TypeScript and Vite
+- [x] Configure Vue Router
+- [x] Configure Pinia
+- [x] Configure basic app layout shell
+- [x] Configure route guards for authenticated areas
 - [ ] Add error boundary / global error handling approach
 - [ ] Add loading state conventions
 
@@ -159,37 +159,37 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [ ] Create status badges and presence indicators
 
 ### App stores
-- [ ] Create `useAuthStore`
+- [x] Create `useAuthStore`
 - [ ] Create `useProfileStore`
-- [ ] Create `useCharacterStore`
-- [ ] Create `useSessionListStore`
-- [ ] Create `useActiveSessionStore`
-- [ ] Create `useTextChatStore`
-- [ ] Create `useVoiceChatStore`
-- [ ] Create `useSettingsStore`
+- [x] Create `useCharacterStore`
+- [x] Create `useSessionListStore`
+- [x] Create `useActiveSessionStore`
+- [x] Create `useTextChatStore`
+- [x] Create `useVoiceChatStore`
+- [x] Create `useSettingsStore`
 
 ---
 
 ## 5. Authentication and user profile
 
 ### Appwrite auth integration
-- [ ] Implement sign up flow
-- [ ] Implement sign in flow
-- [ ] Implement sign out flow
-- [ ] Implement session restore on app load
+- [x] Implement sign up flow
+- [x] Implement sign in flow
+- [x] Implement sign out flow
+- [x] Implement session restore on app load
 - [ ] Implement password reset flow if supported in milestone
-- [ ] Implement auth error handling and user-friendly messaging
+- [x] Implement auth error handling and user-friendly messaging
 
 ### Profile features
-- [ ] Create profile page
-- [ ] Create editable display name flow
+- [x] Create profile page
+- [x] Create editable display name flow
 - [ ] Create avatar upload flow
 - [ ] Persist user preferences
 - [ ] Add account/session diagnostics for debugging
 
 ### Security tasks
 - [ ] Document Appwrite auth configuration
-- [ ] Ensure client never relies on UI-only auth assumptions
+- [x] Ensure client never relies on UI-only auth assumptions
 - [ ] Audit auth-related environment variables and secret handling
 
 ---
@@ -197,22 +197,22 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 6. Character management
 
 ### CRUD
-- [ ] Create character list page
-- [ ] Create character creation flow
-- [ ] Create character edit flow
-- [ ] Create character archive/delete flow
+- [x] Create character list page
+- [x] Create character creation flow
+- [x] Create character edit flow
+- [x] Create character archive/delete flow
 - [ ] Create character detail view
 
 ### Data model
-- [ ] Define character metadata structure
-- [ ] Define stats/resources representation strategy
-- [ ] Define extensible tags/traits model
+- [x] Define character metadata structure
+- [x] Define stats/resources representation strategy
+- [x] Define extensible tags/traits model
 - [ ] Define portrait attachment strategy
-- [ ] Define ownership and access control rules
+- [x] Define ownership and access control rules
 
 ### Future-safe design
-- [ ] Keep character schema setting-agnostic
-- [ ] Avoid hard-coded lore concepts in core character model
+- [x] Keep character schema setting-agnostic
+- [x] Avoid hard-coded lore concepts in core character model
 - [ ] Document extension points for specialized rules packages
 
 ---
@@ -220,9 +220,9 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 7. Campaigns and rules profiles
 
 ### Campaign basics
-- [ ] Create campaign list page
-- [ ] Create campaign creation flow
-- [ ] Create campaign edit flow
+- [x] Create campaign list page
+- [x] Create campaign creation flow
+- [x] Create campaign edit flow
 - [ ] Associate sessions with campaigns
 
 ### Rules profiles
@@ -249,7 +249,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [ ] Create session list/discovery page
 - [ ] Create session creation form
 - [ ] Create session edit/cancel flow
-- [ ] Define session status lifecycle (`draft`, `open`, `active`, `paused`, `ended`, etc.)
+- [x] Define session status lifecycle (`draft`, `open`, `active`, `paused`, `ended`, etc.)
 
 ### Session configuration
 - [ ] Add session title and description fields
@@ -271,7 +271,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 
 ### Membership rules
 - [ ] Define open vs invite-only session model
-- [ ] Define role model (`host`, `player`, `observer`, etc.)
+- [x] Define role model (`host`, `player`, `observer`, etc.)
 - [ ] Define duplicate join handling
 - [ ] Define disconnect/reconnect semantics in lobby state
 
@@ -280,10 +280,10 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ## 9. Colyseus authoritative session runtime
 
 ### Basic server scaffold
-- [ ] Initialize Colyseus server app
-- [ ] Configure room registry
-- [ ] Create base `SessionRoom`
-- [ ] Add health endpoint or diagnostics
+- [x] Initialize Colyseus server app
+- [x] Configure room registry
+- [x] Create base `SessionRoom`
+- [x] Add health endpoint or diagnostics
 - [ ] Add structured logging
 
 ### Join authorization
@@ -293,10 +293,10 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [ ] Document how Appwrite identity maps into room auth
 
 ### Runtime state
-- [ ] Define base room state structure
-- [ ] Define player-presence state
-- [ ] Define selected-character state
-- [ ] Define readiness state
+- [x] Define base room state structure
+- [x] Define player-presence state
+- [x] Define selected-character state
+- [x] Define readiness state
 - [ ] Define generic protocol/session context state
 - [ ] Define versioning strategy for runtime state
 
@@ -378,7 +378,7 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 - [ ] Implement room-join authorization helper if needed
 - [ ] Implement system-message insertion endpoint if useful
 - [ ] Implement snapshot orchestration helpers if needed
-- [ ] Expose health and diagnostics endpoints
+- [x] Expose health and diagnostics endpoints
 
 ### Design constraints
 - [ ] Keep this service narrow and explicit
@@ -547,17 +547,17 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 This is the recommended execution sequence for development.
 
 ### Phase A — make the project exist
-- [ ] bootstrap monorepo
-- [ ] configure lint/typecheck/test/build
-- [ ] create Docker infra
-- [ ] scaffold web app and Colyseus server
-- [ ] establish shared packages
+- [x] bootstrap monorepo
+- [x] configure lint/typecheck/test/build
+- [x] create Docker infra
+- [x] scaffold web app and Colyseus server
+- [x] establish shared packages
 
 ### Phase B — identity and persistence
-- [ ] auth
-- [ ] user profile
-- [ ] character CRUD
-- [ ] campaign CRUD basics
+- [x] auth
+- [x] user profile
+- [x] character CRUD
+- [x] campaign CRUD basics
 
 ### Phase C — session metadata and lobby
 - [ ] create/list/join sessions
@@ -639,18 +639,18 @@ That is enough to prove DDP is a real framework and not just a handsome pile of 
 ## 24. Immediate next actions
 
 ### Right now
-- [ ] Create monorepo skeleton
-- [ ] Add MIT license
-- [ ] Write first ADRs for stack choices
-- [ ] Spin up local Appwrite and LiveKit
-- [ ] Scaffold web app
-- [ ] Scaffold Colyseus server
-- [ ] Define shared entity types
+- [x] Create monorepo skeleton
+- [x] Add MIT license
+- [x] Write first ADRs for stack choices
+- [x] Spin up local Appwrite and LiveKit (Docker Compose defined)
+- [x] Scaffold web app
+- [x] Scaffold Colyseus server
+- [x] Define shared entity types
 
 ### Immediately after that
-- [ ] Implement authentication
-- [ ] Implement character CRUD
-- [ ] Implement session creation and listing
+- [x] Implement authentication
+- [x] Implement character CRUD
+- [~] Implement session creation and listing
 - [ ] Implement lobby join flow
 
 ---

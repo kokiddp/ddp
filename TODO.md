@@ -78,9 +78,9 @@ The roadmap is organized from foundation to progressively more advanced capabili
 ### Docker Compose setup
 - [x] Create Docker Compose stack for Appwrite
 - [x] Create Docker Compose stack for LiveKit
-- [ ] Create Docker Compose stack for supporting reverse proxy if needed
+- [x] Create Docker Compose stack for supporting reverse proxy if needed
 - [x] Provide local hostnames or ports convention
-- [ ] Create bootstrap scripts for local development
+- [x] Create bootstrap scripts for local development
 - [ ] Document startup order and troubleshooting steps
 
 ### Environment management
@@ -473,7 +473,7 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 ## 17. Testing strategy
 
 ### Tooling
-- [ ] Choose unit test runner (`vitest` recommended)
+- [x] Choose unit test runner (`vitest` recommended)
 - [ ] Choose component test strategy
 - [ ] Choose integration/e2e strategy
 
@@ -484,7 +484,7 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 - [ ] Test store logic for session/chat/voice state
 
 ### Integration tests
-- [ ] Test auth bootstrap flow
+- [x] Test auth bootstrap flow
 - [ ] Test session creation flow
 - [ ] Test lobby join/leave flow
 - [ ] Test room authorization flow

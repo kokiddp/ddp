@@ -92,8 +92,15 @@ Trying to make a single product do all of these at once usually ends in architec
 
 ### Infrastructure
 - **Docker Compose** for local development and self-hosted deployments
-- Reverse proxy such as **Caddy**, **Traefik**, or **Nginx**
+- **Traefik** reverse proxy for routing Appwrite API, Console, and Realtime
 - PostgreSQL only if introduced later for analytics/reporting or if Appwrite internals are not enough for some derived services
+
+### Current service versions
+- **Appwrite** 1.6 (self-hosted, with separate console container `appwrite/console:5.2.58`)
+- **LiveKit** v1.8
+- **MariaDB** 10.11
+- **Redis** 7 (Alpine)
+- **Traefik** 2.11
 
 ---
 
@@ -906,18 +913,53 @@ At the time of writing, the stack selected here is compatible with a permissive 
 
 ---
 
-## Immediate next steps
+## Local development
 
-1. Bootstrap monorepo with pnpm workspaces.
-2. Create `apps/web`, `apps/colyseus-server`, and `packages/shared-types`.
-3. Create local Docker Compose for Appwrite and LiveKit.
-4. Implement authentication flow in web app.
-5. Implement character CRUD.
-6. Implement session metadata CRUD.
-7. Implement Colyseus room join flow.
-8. Implement text chat for sessions.
-9. Implement LiveKit token issuance and voice join flow.
-10. Formalize protocol abstractions in `shared-rules`.
+### Prerequisites
+- Node.js 20+ (via nvm)
+- pnpm 10+
+- Docker and Docker Compose
+
+### Quick start
+
+```bash
+# Start infrastructure (Appwrite, LiveKit, MariaDB, Redis, Traefik)
+infra/scripts/dev-up.sh
+
+# Install dependencies
+pnpm install
+
+# Start all dev servers
+pnpm dev
+```
+
+### Services (local)
+
+| Service | URL |
+|---|---|
+| Appwrite Console | http://localhost/console |
+| Appwrite API | http://localhost/v1 |
+| Appwrite Realtime | ws://localhost/v1/realtime |
+| LiveKit | ws://localhost:7880 |
+| Colyseus (dev) | ws://localhost:2567 |
+| Integration API (dev) | http://localhost:3100 |
+| Web client (dev) | http://localhost:5173 |
+
+### Running tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run integration tests only (requires docker stack running)
+pnpm test:integration
+```
+
+### Infrastructure scripts
+
+- `infra/scripts/dev-up.sh` — Start all Docker services
+- `infra/scripts/dev-down.sh` — Stop all Docker services
+- `infra/scripts/dev-reset.sh` — Stop and remove all volumes (full reset)
 
 ---
 

@@ -1,0 +1,24 @@
+{
+  "name": "@ddp/integration-api",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Backend glue API for DDP — token issuance, orchestration helpers",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --build",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@ddp/shared-types": "workspace:*",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

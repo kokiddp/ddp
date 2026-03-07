@@ -1,0 +1,82 @@
+version: "3.8"
+
+services:
+  # ─── Appwrite ───────────────────────────────────────────────
+  appwrite:
+    image: appwrite/appwrite:1.5
+    container_name: ddp-appwrite
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - appwrite-uploads:/storage/uploads
+      - appwrite-cache:/storage/cache
+      - appwrite-config:/storage/config
+      - appwrite-certificates:/storage/certificates
+      - appwrite-functions:/storage/functions
+    environment:
+      - _APP_ENV=development
+      - _APP_LOCALE=en
+      - _APP_CONSOLE_WHITELIST_ROOT=enabled
+      - _APP_CONSOLE_WHITELIST_EMAILS=
+      - _APP_CONSOLE_WHITELIST_IPS=
+      - _APP_SYSTEM_EMAIL_NAME=DDP
+      - _APP_SYSTEM_EMAIL_ADDRESS=noreply@localhost
+      - _APP_SYSTEM_RESPONSE_FORMAT=
+      - _APP_OPTIONS_ABUSE=disabled
+      - _APP_OPTIONS_FORCE_HTTPS=disabled
+      - _APP_OPENSSL_KEY_V1=your-secret-key-change-me
+      - _APP_DOMAIN=localhost
+      - _APP_DOMAIN_TARGET=localhost
+      - _APP_REDIS_HOST=redis
+      - _APP_REDIS_PORT=6379
+      - _APP_DB_HOST=mariadb
+      - _APP_DB_PORT=3306
+      - _APP_DB_SCHEMA=appwrite
+      - _APP_DB_USER=appwrite
+      - _APP_DB_PASS=password
+    depends_on:
+      - mariadb
+      - redis
+
+  mariadb:
+    image: mariadb:10.11
+    container_name: ddp-mariadb
+    restart: unless-stopped
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: appwrite
+      MYSQL_USER: appwrite
+      MYSQL_PASSWORD: password
+
+  redis:
+    image: redis:7-alpine
+    container_name: ddp-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+  # ─── LiveKit ────────────────────────────────────────────────
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: ddp-livekit
+    restart: unless-stopped
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    command: --config /etc/livekit.yaml --dev
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+
+volumes:
+  appwrite-uploads:
+  appwrite-cache:
+  appwrite-config:
+  appwrite-certificates:
+  appwrite-functions:
+  mariadb-data:
+  redis-data:

@@ -1,0 +1,28 @@
+{
+  "name": "@ddp/colyseus-server",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Authoritative live session engine for DDP",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --build",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@ddp/shared-types": "workspace:*",
+    "@ddp/shared-rules": "workspace:*",
+    "@colyseus/core": "^0.15.0",
+    "@colyseus/ws-transport": "^0.15.0",
+    "@colyseus/schema": "^2.0.0",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

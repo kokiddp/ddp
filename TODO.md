@@ -26,7 +26,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Confirm copyright holder / maintainer metadata as **ELK-Lab**
 - [x] Add `LICENSE` file with MIT license
 - [ ] Verify dependency license compatibility and record findings in docs
-- [ ] Create `CONTRIBUTING.md`
+- [x] Create `CONTRIBUTING.md`
 - [ ] Create `CODE_OF_CONDUCT.md`
 
 ### Repository bootstrap
@@ -81,7 +81,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Create Docker Compose stack for supporting reverse proxy if needed
 - [x] Provide local hostnames or ports convention
 - [x] Create bootstrap scripts for local development
-- [ ] Document startup order and troubleshooting steps
+- [x] Document startup order and troubleshooting steps
 
 ### Environment management
 - [x] Define `.env.example` for root-level shared variables
@@ -145,7 +145,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Configure Pinia
 - [x] Configure basic app layout shell
 - [x] Configure route guards for authenticated areas
-- [ ] Add error boundary / global error handling approach
+- [x] Add error boundary / global error handling approach
 - [ ] Add loading state conventions
 
 ### Design system
@@ -330,7 +330,7 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Subscribe to realtime new-message updates
 - [x] Send text messages
 - [x] Display system messages distinctly
-- [ ] Handle disabled-text-chat sessions gracefully
+- [x] Handle disabled-text-chat sessions gracefully
 
 ### Integration points
 - [ ] Allow Colyseus or integration API to emit system messages
@@ -488,8 +488,8 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 - [x] Test session creation flow
 - [x] Test lobby join/leave flow
 - [ ] Test room authorization flow
-- [ ] Test snapshot load/save flow
-- [ ] Test LiveKit token authorization logic
+- [x] Test snapshot load/save flow
+- [x] Test LiveKit token authorization logic
 
 ### E2E tests
 - [ ] Test sign up -> create character -> create session -> join session path
@@ -505,7 +505,7 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 - [ ] Audit token issuance flows
 - [ ] Add rate limiting where relevant
 - [x] Add validation for all external inputs
-- [ ] Sanitize rendered user-generated text
+- [x] Sanitize rendered user-generated text
 
 ### Moderation readiness
 - [ ] Define moderation model for text chat
@@ -584,7 +584,7 @@ This is the recommended execution sequence for development.
 - [~] tests
 - [x] observability
 - [ ] mobile polish
-- [ ] deployment documentation
+- [x] deployment documentation
 
 ---
 

@@ -15,6 +15,7 @@ export interface SessionRoomCallbacks {
     gameSessionId: string;
     senderUserId: string;
     senderCharacterId: string | null;
+    senderDisplayName: string | null;
     kind: string;
     body: string;
     createdAt: string;
@@ -23,6 +24,7 @@ export interface SessionRoomCallbacks {
     gameSessionId: string;
     senderUserId: string;
     senderCharacterId: string | null;
+    senderDisplayName: string | null;
     kind: string;
     body: string;
     createdAt: string;

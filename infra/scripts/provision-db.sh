@@ -172,6 +172,7 @@ create_collection "text_messages" "Text Messages"
 create_string   text_messages gameSessionId 255 true
 create_string   text_messages senderUserId 255 true
 create_string   text_messages senderCharacterId 255 false
+create_string   text_messages senderDisplayName 255 false
 create_string   text_messages kind 50 true
 create_string   text_messages body 5000 true
 echo

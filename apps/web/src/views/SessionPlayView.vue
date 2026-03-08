@@ -32,6 +32,7 @@ function mapTextMessage(msg: {
   gameSessionId: string;
   senderUserId: string;
   senderCharacterId: string | null;
+  senderDisplayName: string | null;
   kind: string;
   body: string;
   createdAt: string;
@@ -41,6 +42,7 @@ function mapTextMessage(msg: {
     gameSessionId: toGameSessionId(msg.gameSessionId),
     senderUserId: toUserId(msg.senderUserId),
     senderCharacterId: msg.senderCharacterId ? toCharacterId(msg.senderCharacterId) : null,
+    senderDisplayName: msg.senderDisplayName ?? null,
     kind: msg.kind as TextMessage['kind'],
     body: msg.body,
     createdAt: msg.createdAt,
@@ -56,6 +58,11 @@ const voiceChatEnabled = computed(() => sessionStore.session?.['voiceChatEnabled
 const isHost = computed(() => {
   if (!authStore.user || !sessionStore.session) return false;
   return sessionStore.session['hostUserId'] === authStore.user.$id;
+});
+const myCharacterId = computed(() => {
+  if (!authStore.user) return undefined;
+  const player = sessionStore.players.find((p) => p.userId === authStore.user!.$id);
+  return (player?.characterId as string) || undefined;
 });
 
 onMounted(async () => {
@@ -192,7 +199,7 @@ function handleToggleSpeaker() {
       </main>
 
       <aside v-if="textChatEnabled" class="session-play__sidebar">
-        <TextChatPanel />
+        <TextChatPanel :sender-character-id="myCharacterId" />
       </aside>
 
       <aside v-else-if="connected" class="session-play__sidebar session-play__sidebar--disabled">

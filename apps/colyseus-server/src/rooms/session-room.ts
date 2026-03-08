@@ -10,6 +10,7 @@ import {
   updateSessionStatus,
   saveTextMessage,
   getTextMessages,
+  getCharacter,
 } from '../appwrite.js';
 import { log } from '../logger.js';
 import { z } from 'zod';
@@ -69,6 +70,9 @@ export class SessionRoom extends Room<SessionState> {
 
   /** Map from Colyseus client.sessionId to authenticated userId */
   private clientUserMap = new Map<string, string>();
+
+  /** Cache of characterId → character name for display in chat */
+  private characterNameCache = new Map<string, string>();
 
   /** Interval handle for auto-snapshots */
   private snapshotInterval: ReturnType<typeof setInterval> | null = null;
@@ -242,12 +246,22 @@ export class SessionRoom extends Room<SessionState> {
       }
     });
 
-    this.onMessage('bindCharacter', (client, message: unknown) => {
+    this.onMessage('bindCharacter', async (client, message: unknown) => {
       const player = this.state.players.get(client.sessionId);
       if (!player) return;
       const parsed = bindCharacterSchema.safeParse(message);
       if (!parsed.success) return;
       player.characterId = parsed.data.characterId;
+
+      // Cache character name for chat display
+      if (!this.characterNameCache.has(parsed.data.characterId)) {
+        try {
+          const charDoc = await getCharacter(parsed.data.characterId);
+          this.characterNameCache.set(parsed.data.characterId, charDoc.name as string);
+        } catch (err) {
+          log.warn('Failed to look up character name', { characterId: parsed.data.characterId, error: String(err) });
+        }
+      }
     });
 
     this.onMessage('startSession', (client) => {
@@ -363,11 +377,14 @@ export class SessionRoom extends Room<SessionState> {
       if (!parsed.success) return;
 
       const timestamp = new Date().toISOString();
+      const charId = parsed.data.senderCharacterId || player.characterId || null;
+      const displayName = charId ? (this.characterNameCache.get(charId) ?? null) : null;
 
       const textMsg = {
         gameSessionId: this.state.sessionId,
         senderUserId: player.userId,
-        senderCharacterId: parsed.data.senderCharacterId ?? null,
+        senderCharacterId: charId,
+        senderDisplayName: displayName,
         kind: 'user' as const,
         body: parsed.data.body,
         createdAt: timestamp,
@@ -381,6 +398,7 @@ export class SessionRoom extends Room<SessionState> {
         gameSessionId: textMsg.gameSessionId,
         senderUserId: textMsg.senderUserId,
         senderCharacterId: textMsg.senderCharacterId,
+        senderDisplayName: textMsg.senderDisplayName,
         kind: textMsg.kind,
         body: textMsg.body,
       }).catch((err) =>
@@ -397,6 +415,7 @@ export class SessionRoom extends Room<SessionState> {
           gameSessionId: m.gameSessionId,
           senderUserId: m.senderUserId,
           senderCharacterId: m.senderCharacterId ?? null,
+          senderDisplayName: (m.senderDisplayName as string) ?? null,
           kind: m.kind,
           body: m.body,
           createdAt: m.$createdAt,

@@ -4,6 +4,10 @@ import { useTextChatStore } from '../stores/useTextChatStore.js';
 import { sendTextMessage } from '../services/colyseus.service.js';
 import { useAuthStore } from '../stores/useAuthStore.js';
 
+const props = defineProps<{
+  senderCharacterId?: string;
+}>();
+
 const chatStore = useTextChatStore();
 const authStore = useAuthStore();
 
@@ -13,7 +17,7 @@ const messagesContainer = ref<HTMLElement | null>(null);
 function handleSend(): void {
   const body = messageInput.value.trim();
   if (!body) return;
-  sendTextMessage(body);
+  sendTextMessage(body, props.senderCharacterId);
   messageInput.value = '';
 }
 
@@ -58,7 +62,7 @@ function isOwnMessage(senderUserId: string): boolean {
         </template>
         <template v-else>
           <div class="chat-message__meta">
-            <span class="chat-message__sender">{{ msg.senderUserId }}</span>
+            <span class="chat-message__sender">{{ msg.senderDisplayName || msg.senderUserId }}</span>
             <span class="chat-message__time">{{ formatTime(msg.createdAt) }}</span>
           </div>
           <div class="chat-message__body">{{ msg.body }}</div>

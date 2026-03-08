@@ -7,6 +7,7 @@ export interface TextMessage {
   gameSessionId: GameSessionId;
   senderUserId: UserId;
   senderCharacterId: CharacterId | null;
+  senderDisplayName: string | null;
   kind: TextMessageKind;
   body: string;
   createdAt: string;

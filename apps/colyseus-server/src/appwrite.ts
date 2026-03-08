@@ -119,6 +119,7 @@ export async function saveTextMessage(data: {
   gameSessionId: string;
   senderUserId: string;
   senderCharacterId: string | null;
+  senderDisplayName: string | null;
   kind: string;
   body: string;
 }) {
@@ -137,6 +138,13 @@ export async function getTextMessages(gameSessionId: string, limit = 50) {
   ]);
   // Return in chronological order
   return result.documents.reverse();
+}
+
+/**
+ * Get a character document by ID.
+ */
+export async function getCharacter(characterId: string) {
+  return databases.getDocument(DATABASE_ID, COLLECTIONS.CHARACTERS, characterId);
 }
 
 /**

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { AccessToken } from 'livekit-server-sdk';
 import { Client, Databases, Query } from 'node-appwrite';

@@ -18,6 +18,7 @@
     "@colyseus/ws-transport": "^0.15.0",
     "@ddp/shared-rules": "workspace:*",
     "@ddp/shared-types": "workspace:*",
+    "dotenv": "^17.3.1",
     "express": "^4.21.0",
     "node-appwrite": "^14.2.0"
   },

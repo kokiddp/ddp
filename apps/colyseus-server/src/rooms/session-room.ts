@@ -227,8 +227,19 @@ export class SessionRoom extends Room<SessionState> {
         }
       }
 
-      // Load current players from Appwrite
+      // Load current players from Appwrite and pre-cache character names
       const players = await getSessionPlayers(this.state.sessionId);
+      for (const p of players) {
+        const charId = p.characterId as string | null;
+        if (charId && !this.characterNameCache.has(charId)) {
+          try {
+            const charDoc = await getCharacter(charId);
+            this.characterNameCache.set(charId, charDoc.name as string);
+          } catch {
+            // Character lookup failed, will fall back to userId in chat
+          }
+        }
+      }
       log.info('Loaded players from Appwrite', { count: players.length, sessionId: this.state.sessionId });
     } catch (err) {
       log.error('Bootstrap failed', { sessionId: this.state.sessionId, error: String(err) });

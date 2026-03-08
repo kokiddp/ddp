@@ -99,16 +99,10 @@ export class SessionRoom extends Room<SessionState> {
       throw new Error('Not a member of this session');
     }
 
-    // Block new joins when session is active (allow reconnects by checking if already in room)
-    if (this.state.status === 'active') {
-      let alreadyInRoom = false;
-      this.state.players.forEach((p) => {
-        if (p.userId === userId) alreadyInRoom = true;
-      });
-      if (!alreadyInRoom) {
-        throw new Error('Session is already active — new players cannot join');
-      }
-    }
+    // Note: We don't block active-session joins here because legitimate members
+    // need to reconnect (e.g., navigating from lobby to play view, or page reload).
+    // The isSessionMember check above already ensures only registered members can join.
+    // New player registration is blocked at the Appwrite layer (session.service joinSession).
 
     return { userId, sessionId };
   }

@@ -23,6 +23,10 @@ const currentPlayer = computed(() =>
   sessionStore.players.find((p) => p.$id === sessionStore.currentPlayerId),
 );
 const isReady = computed(() => currentPlayer.value?.status === 'ready');
+const canJoin = computed(() => {
+  const status = sessionStore.session?.['status'] as string | undefined;
+  return !hasJoined.value && status !== 'active' && status !== 'ended';
+});
 
 // Real-time state from Colyseus
 const connectedToRoom = ref(false);
@@ -105,6 +109,12 @@ onUnmounted(async () => {
 
 async function handleJoin() {
   if (!authStore.user) return;
+  // Block new joins if session is already active
+  const status = sessionStore.session?.['status'] as string | undefined;
+  if (status === 'active' || status === 'ended') {
+    sessionStore.error = `Cannot join — session is ${status}`;
+    return;
+  }
   const isHost = sessionStore.session?.hostUserId === authStore.user.$id;
   const ok = await sessionStore.join(props.sessionId, authStore.user.$id, isHost ? 'host' : 'player');
   if (ok && !connectedToRoom.value) {
@@ -184,7 +194,7 @@ const displayPlayers = computed(() => {
         </div>
       </div>
       <div class="lobby-actions">
-        <button v-if="!hasJoined" class="btn-primary" @click="handleJoin">Join Session</button>
+        <button v-if="canJoin" class="btn-primary" @click="handleJoin">Join Session</button>
         <template v-if="hasJoined">
           <button class="btn-secondary" :class="{ active: isReady }" @click="handleToggleReady">
             {{ isReady ? 'Ready!' : 'Ready Up' }}

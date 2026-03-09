@@ -4,6 +4,7 @@ import {
   Track,
   type RemoteParticipant,
   type RemoteTrackPublication,
+  type AudioCaptureOptions,
 } from 'livekit-client';
 import { account } from './appwrite.js';
 
@@ -159,4 +160,102 @@ export function getVoiceParticipants(): string[] {
  */
 export function getCurrentRoom(): Room | null {
   return currentRoom;
+}
+
+/**
+ * List available audio input devices (microphones).
+ */
+export async function listAudioInputDevices(): Promise<MediaDeviceInfo[]> {
+  const devices = await Room.getLocalDevices('audioinput');
+  return devices;
+}
+
+/**
+ * List available audio output devices (speakers).
+ */
+export async function listAudioOutputDevices(): Promise<MediaDeviceInfo[]> {
+  const devices = await Room.getLocalDevices('audiooutput');
+  return devices;
+}
+
+/**
+ * Switch microphone to a specific device.
+ */
+export async function setAudioInputDevice(deviceId: string): Promise<void> {
+  if (!currentRoom) return;
+  const opts: AudioCaptureOptions = { deviceId };
+  await currentRoom.switchActiveDevice('audioinput', deviceId);
+  // If mic is not enabled, enable it with the new device
+  if (!currentRoom.localParticipant.isMicrophoneEnabled) {
+    await currentRoom.localParticipant.setMicrophoneEnabled(true, opts);
+  }
+}
+
+/**
+ * Switch audio output to a specific device.
+ */
+export async function setAudioOutputDevice(deviceId: string): Promise<void> {
+  if (!currentRoom) return;
+  await currentRoom.switchActiveDevice('audiooutput', deviceId);
+}
+
+/**
+ * Start monitoring local microphone audio level.
+ * Returns a cleanup function to stop monitoring.
+ */
+export function startAudioLevelMonitor(
+  callback: (level: number) => void,
+  intervalMs = 50,
+): () => void {
+  let animFrameId: number | null = null;
+  let analyser: AnalyserNode | null = null;
+  let dataArray: Uint8Array<ArrayBuffer> | null = null;
+  let stopped = false;
+
+  function setup() {
+    if (!currentRoom || stopped) return;
+    const micPub = currentRoom.localParticipant.getTrackPublication(Track.Source.Microphone);
+    if (!micPub?.track?.mediaStream) {
+      // Mic not yet available, retry
+      setTimeout(setup, 200);
+      return;
+    }
+
+    const ctx = new AudioContext();
+    const source = ctx.createMediaStreamSource(micPub.track.mediaStream);
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    dataArray = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
+
+    let lastTime = 0;
+    function tick(time: number) {
+      if (stopped) return;
+      if (time - lastTime >= intervalMs) {
+        lastTime = time;
+        if (analyser && dataArray) {
+          analyser.getByteFrequencyData(dataArray);
+          // Compute RMS-like average
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i] * dataArray[i];
+          }
+          const rms = Math.sqrt(sum / dataArray.length);
+          // Normalize to 0-1 range (255 max per bin)
+          callback(Math.min(rms / 128, 1));
+        }
+      }
+      animFrameId = requestAnimationFrame(tick);
+    }
+    animFrameId = requestAnimationFrame(tick);
+  }
+
+  setup();
+
+  return () => {
+    stopped = true;
+    if (animFrameId !== null) {
+      cancelAnimationFrame(animFrameId);
+    }
+  };
 }

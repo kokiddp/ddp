@@ -123,6 +123,21 @@ async function handleToggleMic() {
 function handleToggleSpeaker() {
   voiceStore.setSpeakerEnabled(!voiceStore.speakerEnabled);
 }
+
+async function handleInputDeviceChange(event: Event) {
+  const select = event.target as HTMLSelectElement;
+  if (select.value) await voiceStore.switchInputDevice(select.value);
+}
+
+async function handleOutputDeviceChange(event: Event) {
+  const select = event.target as HTMLSelectElement;
+  if (select.value) await voiceStore.switchOutputDevice(select.value);
+}
+
+const micLevelBars = computed(() => {
+  // Return number of active bars out of 8
+  return Math.round(voiceStore.micLevel * 8);
+});
 </script>
 
 <template>
@@ -183,6 +198,53 @@ function handleToggleSpeaker() {
               <button class="btn-voice btn-leave" @click="handleLeaveVoice">
                 Leave Voice
               </button>
+            </div>
+
+            <!-- Mic level indicator -->
+            <div v-if="voiceStore.microphoneEnabled" class="mic-level">
+              <span class="mic-level__label">Mic</span>
+              <div class="mic-level__bars">
+                <div
+                  v-for="i in 8"
+                  :key="i"
+                  class="mic-level__bar"
+                  :class="{ 'mic-level__bar--active': i <= micLevelBars }"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Device selectors -->
+            <div class="voice-devices">
+              <div v-if="voiceStore.audioInputDevices.length > 0" class="voice-device-select">
+                <label for="voice-input">Microphone</label>
+                <select
+                  id="voice-input"
+                  :value="voiceStore.selectedInputDeviceId"
+                  @change="handleInputDeviceChange"
+                >
+                  <option value="">Default</option>
+                  <option
+                    v-for="d in voiceStore.audioInputDevices"
+                    :key="d.deviceId"
+                    :value="d.deviceId"
+                  >{{ d.label || `Mic ${d.deviceId.slice(0, 8)}` }}</option>
+                </select>
+              </div>
+              <div v-if="voiceStore.audioOutputDevices.length > 0" class="voice-device-select">
+                <label for="voice-output">Speaker</label>
+                <select
+                  id="voice-output"
+                  :value="voiceStore.selectedOutputDeviceId"
+                  @change="handleOutputDeviceChange"
+                >
+                  <option value="">Default</option>
+                  <option
+                    v-for="d in voiceStore.audioOutputDevices"
+                    :key="d.deviceId"
+                    :value="d.deviceId"
+                  >{{ d.label || `Speaker ${d.deviceId.slice(0, 8)}` }}</option>
+                </select>
+              </div>
             </div>
 
             <div v-if="voiceStore.participants.length > 0" class="voice-participants">
@@ -439,6 +501,82 @@ function handleToggleSpeaker() {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* Mic level indicator */
+.mic-level {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.mic-level__label {
+  font-size: 12px;
+  color: #888;
+  min-width: 24px;
+}
+
+.mic-level__bars {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+}
+
+.mic-level__bar {
+  width: 6px;
+  height: 14px;
+  border-radius: 2px;
+  background: #2a2a3e;
+  transition: background 0.08s ease;
+}
+
+.mic-level__bar--active:nth-child(-n+3) {
+  background: #4caf50;
+}
+
+.mic-level__bar--active:nth-child(n+4):nth-child(-n+6) {
+  background: #ffca28;
+}
+
+.mic-level__bar--active:nth-child(n+7) {
+  background: #ef5350;
+}
+
+/* Device selectors */
+.voice-devices {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.voice-device-select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.voice-device-select label {
+  font-size: 11px;
+  color: #888;
+}
+
+.voice-device-select select {
+  padding: 4px 8px;
+  border: 1px solid #3a3a4e;
+  border-radius: 4px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.voice-device-select select:focus {
+  outline: none;
+  border-color: #5a5a8a;
 }
 
 .voice-participants {

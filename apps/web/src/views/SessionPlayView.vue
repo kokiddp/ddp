@@ -81,6 +81,9 @@ onMounted(async () => {
       onChatHistory: (messages) => {
         chatStore.setMessages(messages.map(mapTextMessage));
       },
+      onPlayerJoined: () => { /* handled by Colyseus state sync */ },
+      onPlayerLeft: () => { /* handled by Colyseus state sync */ },
+      onPlayerReady: () => { /* handled by Colyseus state sync */ },
       onError: (code, message) => {
         connectionError.value = message ?? `Connection error (code: ${code})`;
       },

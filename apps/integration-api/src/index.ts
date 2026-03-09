@@ -10,6 +10,22 @@ const port = Number(process.env.PORT) || 3100;
 
 app.use(express.json());
 
+// CORS — allow web client origins
+app.use((req, res, next) => {
+  const allowedOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:4173,http://localhost:5173').split(',');
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  next();
+});
+
 app.use((req, _res, next) => {
   log.info('Incoming request', { method: req.method, path: req.path });
   next();

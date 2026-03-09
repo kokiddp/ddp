@@ -38,6 +38,7 @@ let hostUserId = '';
 let hostCookie = '';
 let sessionDocId = '';
 let playerDocId = '';
+let rejoinedPlayerDocId = '';
 
 const hostEmail = `host-${Date.now()}@ddp.dev`;
 const hostPassword = 'test-password-123';
@@ -73,6 +74,12 @@ describe('Session lifecycle integration', () => {
 
   afterAll(async () => {
     // Clean up: delete session doc and player doc via server API
+    if (rejoinedPlayerDocId && rejoinedPlayerDocId !== playerDocId) {
+      await fetch(`${ENDPOINT}/databases/${DATABASE}/collections/game_players/documents/${rejoinedPlayerDocId}`, {
+        method: 'DELETE',
+        headers: serverHeaders(),
+      }).catch(() => {});
+    }
     if (playerDocId) {
       await fetch(`${ENDPOINT}/databases/${DATABASE}/collections/game_players/documents/${playerDocId}`, {
         method: 'DELETE',
@@ -229,5 +236,49 @@ describe('Session lifecycle integration', () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.status).toBe('left');
+  });
+
+  it('rejoining should update existing player instead of creating duplicate', async () => {
+    expect(playerDocId).toBeTruthy();
+
+    const beforeRes = await fetch(
+      `${ENDPOINT}/databases/${DATABASE}/collections/game_players/documents`,
+      {
+        headers: serverHeaders(),
+      },
+    );
+    expect(beforeRes.status).toBe(200);
+    const beforeData = await beforeRes.json();
+    const beforeCount = (beforeData.documents as Array<Record<string, unknown>>).filter(
+      (d) => d['gameSessionId'] === sessionDocId && d['userId'] === hostUserId,
+    ).length;
+
+    // Rejoin by patching the same record back to joined.
+    const rejoinRes = await fetch(
+      `${ENDPOINT}/databases/${DATABASE}/collections/game_players/documents/${playerDocId}`,
+      {
+        method: 'PATCH',
+        headers: serverHeaders(),
+        body: JSON.stringify({ data: { status: 'joined', leftAt: null } }),
+      },
+    );
+    expect(rejoinRes.status).toBe(200);
+    const rejoinData = await rejoinRes.json();
+    rejoinedPlayerDocId = rejoinData.$id;
+    expect(rejoinData.status).toBe('joined');
+
+    const afterRes = await fetch(
+      `${ENDPOINT}/databases/${DATABASE}/collections/game_players/documents`,
+      {
+        headers: serverHeaders(),
+      },
+    );
+    expect(afterRes.status).toBe(200);
+    const afterData = await afterRes.json();
+    const afterCount = (afterData.documents as Array<Record<string, unknown>>).filter(
+      (d) => d['gameSessionId'] === sessionDocId && d['userId'] === hostUserId,
+    ).length;
+
+    expect(afterCount).toBe(beforeCount);
   });
 });

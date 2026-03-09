@@ -39,7 +39,12 @@ export const useActiveSessionStore = defineStore('activeSession', () => {
     error.value = null;
     try {
       const doc = await joinSession({ gameSessionId: sessionId, userId, role });
-      players.value.push(doc);
+      const idx = players.value.findIndex((p) => p.$id === doc.$id);
+      if (idx === -1) {
+        players.value.push(doc);
+      } else {
+        players.value[idx] = doc;
+      }
       currentPlayerId.value = doc.$id;
       return true;
     } catch (e: unknown) {

@@ -83,6 +83,53 @@ export async function joinSession(data: {
   userId: string;
   role: string;
 }): Promise<Models.Document> {
+  const session = await getSession(data.gameSessionId);
+
+  if (session['status'] === 'ended') {
+    throw new Error('Cannot join an ended session.');
+  }
+
+  const playerResult = await databases.listDocuments(DATABASE_ID, COLLECTIONS.GAME_PLAYERS, [
+    Query.equal('gameSessionId', data.gameSessionId),
+    Query.equal('userId', data.userId),
+    Query.orderDesc('$createdAt'),
+    Query.limit(1),
+  ]);
+
+  const existing = playerResult.documents[0];
+
+  if (existing) {
+    const status = String(existing['status'] ?? '');
+
+    if (status === 'kicked') {
+      throw new Error('You were removed from this session and cannot rejoin.');
+    }
+
+    if (status === 'joined' || status === 'ready') {
+      return existing;
+    }
+
+    if (status === 'left' || status === 'invited') {
+      return databases.updateDocument(DATABASE_ID, COLLECTIONS.GAME_PLAYERS, existing.$id, {
+        status: 'joined',
+        role: data.role,
+        leftAt: null,
+      });
+    }
+  }
+
+  const activePlayers = await databases.listDocuments(DATABASE_ID, COLLECTIONS.GAME_PLAYERS, [
+    Query.equal('gameSessionId', data.gameSessionId),
+    Query.notEqual('status', 'left'),
+    Query.notEqual('status', 'kicked'),
+    Query.limit(100),
+  ]);
+
+  const maxPlayers = Number(session['maxPlayers'] ?? 0);
+  if (maxPlayers > 0 && activePlayers.total >= maxPlayers) {
+    throw new Error('Session is full.');
+  }
+
   return databases.createDocument(DATABASE_ID, COLLECTIONS.GAME_PLAYERS, ID.unique(), {
     gameSessionId: data.gameSessionId,
     userId: data.userId,

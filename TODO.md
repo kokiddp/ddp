@@ -86,7 +86,7 @@ Evidence used:
 - [x] Lobby supports join/leave, ready toggle, character binding, start action
 - [x] Host-driven session status transitions (`lobby`, `active`, `paused`, `ended`)
 - [ ] Invite-only/private session model
-- [ ] Duplicate membership/join dedup at application layer
+- [x] Duplicate membership/join dedup at application layer
 
 ## 8. Colyseus authoritative runtime
 
@@ -190,7 +190,7 @@ Target MVP criteria and current state:
 
 1. [x] Add CI workflow for lint, typecheck, unit tests, and environment-aware integration tests.
 2. [x] Implement missing user-critical profile/auth features: password reset, avatar upload, preferences UX.
-3. [ ] Harden session membership and Appwrite permissions (including duplicate join handling).
+3. [~] Harden session membership and Appwrite permissions (including duplicate join handling).
 4. [ ] Add rules profile selection and baseline CRUD path in web + persistence.
 5. [ ] Improve voice robustness for permission denial and reconnect behavior.
 6. [ ] Add component/store tests and at least one happy-path E2E flow.

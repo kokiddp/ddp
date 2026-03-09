@@ -71,9 +71,9 @@ Evidence used:
 - [x] Sign up, sign in, sign out, session restore
 - [x] Profile page with display-name editing
 - [x] Auth boundary enforced by route guard and backend checks
-- [ ] Password reset flow
-- [ ] Avatar upload flow
-- [~] Preferences API support exists (`updatePreferences`) but no complete UX
+- [x] Password reset flow
+- [x] Avatar upload flow (requires configured Appwrite avatar bucket)
+- [x] Preferences UX persisted to Appwrite (`preferredTheme`, `preferredTimezone`, `avatarUrl`)
 - [ ] Auth/session diagnostics panel
 
 ## 7. Characters, campaigns, sessions, lobby
@@ -189,7 +189,7 @@ Target MVP criteria and current state:
 ## 19. Next prioritized actions
 
 1. [x] Add CI workflow for lint, typecheck, unit tests, and environment-aware integration tests.
-2. [ ] Implement missing user-critical profile/auth features: password reset, avatar upload, preferences UX.
+2. [x] Implement missing user-critical profile/auth features: password reset, avatar upload, preferences UX.
 3. [ ] Harden session membership and Appwrite permissions (including duplicate join handling).
 4. [ ] Add rules profile selection and baseline CRUD path in web + persistence.
 5. [ ] Improve voice robustness for permission denial and reconnect behavior.

@@ -1,18 +1,24 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '../../stores/useAuthStore.js';
-
-const authStore = useAuthStore();
-const router = useRouter();
+import { requestPasswordRecovery } from '../../services/auth.service.js';
 
 const email = ref('');
-const password = ref('');
+const loading = ref(false);
+const error = ref<string | null>(null);
+const message = ref<string | null>(null);
 
-async function handleLogin() {
-  const success = await authStore.login({ email: email.value, password: password.value });
-  if (success) {
-    router.push('/app/dashboard');
+async function handleSubmit() {
+  loading.value = true;
+  error.value = null;
+  message.value = null;
+
+  try {
+    await requestPasswordRecovery(email.value.trim());
+    message.value = 'Password reset link sent. Check your email.';
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to request password reset';
+  } finally {
+    loading.value = false;
   }
 }
 </script>
@@ -20,26 +26,21 @@ async function handleLogin() {
 <template>
   <div class="auth-page">
     <div class="auth-card">
-      <h1>Sign In</h1>
-      <form @submit.prevent="handleLogin">
+      <h1>Reset Password</h1>
+      <p class="helper">Enter your account email and we will send a reset link.</p>
+      <form @submit.prevent="handleSubmit">
         <div class="field">
           <label for="email">Email</label>
           <input id="email" v-model="email" type="email" required autocomplete="email" />
         </div>
-        <div class="field">
-          <label for="password">Password</label>
-          <input id="password" v-model="password" type="password" required autocomplete="current-password" />
-        </div>
-        <div v-if="authStore.error" class="error">{{ authStore.error }}</div>
-        <button type="submit" :disabled="authStore.loading">
-          {{ authStore.loading ? 'Signing in...' : 'Sign In' }}
+        <div v-if="error" class="error">{{ error }}</div>
+        <div v-if="message" class="success">{{ message }}</div>
+        <button type="submit" :disabled="loading">
+          {{ loading ? 'Sending...' : 'Send reset link' }}
         </button>
       </form>
       <p class="alt-action">
-        <router-link to="/auth/forgot-password">Forgot your password?</router-link>
-      </p>
-      <p class="alt-action">
-        Don't have an account? <router-link to="/auth/register">Register</router-link>
+        Back to <router-link to="/auth/login">Sign In</router-link>
       </p>
     </div>
   </div>
@@ -58,10 +59,16 @@ async function handleLogin() {
   border-radius: 8px;
   padding: 2rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
 }
 .auth-card h1 {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+.helper {
+  color: #9a9ab0;
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
   text-align: center;
 }
 .field {
@@ -89,7 +96,12 @@ async function handleLogin() {
 .error {
   color: #ff6b6b;
   font-size: 0.875rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+}
+.success {
+  color: #80c080;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
 }
 button {
   width: 100%;

@@ -4,8 +4,15 @@ import { useTextChatStore } from '../stores/useTextChatStore.js';
 import { sendTextMessage } from '../services/colyseus.service.js';
 import { useAuthStore } from '../stores/useAuthStore.js';
 
+interface PlayerInfo {
+  userId: string;
+  userName: string;
+  characterName: string | null;
+}
+
 const props = defineProps<{
   senderCharacterId?: string;
+  playerInfoMap?: Map<string, PlayerInfo>;
 }>();
 
 const chatStore = useTextChatStore();
@@ -39,6 +46,16 @@ function formatTime(iso: string): string {
 function isOwnMessage(senderUserId: string): boolean {
   return senderUserId === authStore.user?.$id;
 }
+
+function senderTooltip(senderUserId: string): string {
+  const info = props.playerInfoMap?.get(senderUserId);
+  if (!info) return senderUserId;
+  const parts: string[] = [];
+  if (info.characterName) parts.push(`Character: ${info.characterName}`);
+  parts.push(`User: ${info.userName}`);
+  parts.push(`ID: ${info.userId}`);
+  return parts.join('\n');
+}
 </script>
 
 <template>
@@ -62,7 +79,7 @@ function isOwnMessage(senderUserId: string): boolean {
         </template>
         <template v-else>
           <div class="chat-message__meta">
-            <span class="chat-message__sender">{{ msg.senderDisplayName || msg.senderUserId }}</span>
+            <span class="chat-message__sender" :title="senderTooltip(msg.senderUserId)">{{ msg.senderDisplayName || msg.senderUserId }}</span>
             <span class="chat-message__time">{{ formatTime(msg.createdAt) }}</span>
           </div>
           <div class="chat-message__body">{{ msg.body }}</div>
@@ -155,6 +172,7 @@ function isOwnMessage(senderUserId: string): boolean {
 .chat-message__sender {
   font-weight: 600;
   color: #c0c0c0;
+  cursor: default;
 }
 
 .chat-message__body {

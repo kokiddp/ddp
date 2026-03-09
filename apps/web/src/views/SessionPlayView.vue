@@ -13,6 +13,8 @@ import {
   sendEndSession,
 } from '../services/colyseus.service.js';
 import TextChatPanel from '../components/TextChatPanel.vue';
+import { getCharacter } from '../services/character.service.js';
+import { getCampaign } from '../services/campaign.service.js';
 import {
   type TextMessage,
   textMessageId,
@@ -52,6 +54,15 @@ function mapTextMessage(msg: {
 const connected = ref(false);
 const connectionError = ref<string | null>(null);
 const sessionStatus = ref('connecting');
+const campaignName = ref<string | null>(null);
+
+// Map userId → { characterName, userName, userId }
+interface PlayerInfo {
+  userId: string;
+  userName: string;
+  characterName: string | null;
+}
+const playerInfoMap = ref<Map<string, PlayerInfo>>(new Map());
 
 const textChatEnabled = computed(() => sessionStore.session?.['textChatEnabled'] === true);
 const voiceChatEnabled = computed(() => sessionStore.session?.['voiceChatEnabled'] === true);
@@ -65,9 +76,53 @@ const myCharacterId = computed(() => {
   return (player?.characterId as string) || undefined;
 });
 
+async function buildPlayerInfoMap(): Promise<void> {
+  const map = new Map<string, PlayerInfo>();
+  for (const p of sessionStore.players) {
+    const uid = p.userId as string;
+    const charId = p.characterId as string | null;
+    let characterName: string | null = null;
+    if (charId) {
+      try {
+        const charDoc = await getCharacter(charId);
+        characterName = charDoc.name as string;
+      } catch { /* character may have been deleted */ }
+    }
+    map.set(uid, { userId: uid, userName: uid, characterName });
+  }
+  playerInfoMap.value = map;
+}
+
+function getDisplayName(identity: string): string {
+  const info = playerInfoMap.value.get(identity);
+  return info?.characterName ?? info?.userName ?? identity;
+}
+
+function getTooltip(identity: string): string {
+  const info = playerInfoMap.value.get(identity);
+  if (!info) return identity;
+  const parts: string[] = [];
+  if (info.characterName) parts.push(`Character: ${info.characterName}`);
+  parts.push(`User: ${info.userName}`);
+  parts.push(`ID: ${info.userId}`);
+  return parts.join('\n');
+}
+
 onMounted(async () => {
   // Load session metadata from Appwrite
   await sessionStore.loadSession(props.sessionId);
+
+  // Load campaign name
+  const cid = sessionStore.session?.['campaignId'] as string | undefined;
+  if (cid) {
+    try {
+      const campaign = await getCampaign(cid);
+      campaignName.value = campaign.title as string;
+    } catch { /* campaign may not exist */ }
+  }
+
+  // Build player info map (userId → character name)
+  await buildPlayerInfoMap();
 
   try {
     const hostUserId = sessionStore.session?.['hostUserId'] as string | undefined;
@@ -144,6 +199,7 @@ const micLevelBars = computed(() => {
   <div class="session-play">
     <header class="session-play__header">
       <h1>Session</h1>
+      <span v-if="campaignName" class="session-play__campaign">{{ campaignName }}</span>
       <span class="session-play__status" :class="'status--' + sessionStatus">{{ sessionStatus }}</span>
       <div v-if="connected && isHost" class="session-play__header-actions">
         <button v-if="sessionStatus === 'lobby'" class="btn-sm btn-host" @click="sendStartSession">Start</button>
@@ -253,7 +309,9 @@ const micLevelBars = computed(() => {
                 v-for="p in voiceStore.participants"
                 :key="p"
                 class="voice-participant"
-              >{{ p }}</span>
+                :class="{ 'voice-participant--speaking': voiceStore.activeSpeakers.has(p) }"
+                :title="getTooltip(p)"
+              >{{ getDisplayName(p) }}</span>
             </div>
           </div>
         </div>
@@ -264,7 +322,7 @@ const micLevelBars = computed(() => {
       </main>
 
       <aside v-if="textChatEnabled" class="session-play__sidebar">
-        <TextChatPanel :sender-character-id="myCharacterId" />
+        <TextChatPanel :sender-character-id="myCharacterId" :player-info-map="playerInfoMap" />
       </aside>
 
       <aside v-else-if="connected" class="session-play__sidebar session-play__sidebar--disabled">
@@ -295,6 +353,12 @@ const micLevelBars = computed(() => {
 .session-play__header h1 {
   margin: 0;
   font-size: 18px;
+}
+
+.session-play__campaign {
+  font-size: 13px;
+  color: #a0a0ff;
+  font-weight: 500;
 }
 
 .session-play__status {
@@ -598,6 +662,14 @@ const micLevelBars = computed(() => {
   border-radius: 10px;
   font-size: 12px;
   color: #c0c0e0;
+  cursor: default;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.voice-participant--speaking {
+  background: #1a4a2a;
+  color: #60e080;
+  box-shadow: 0 0 6px rgba(96, 224, 128, 0.4);
 }
 
 .feature-disabled {

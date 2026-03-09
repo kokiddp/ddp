@@ -4,6 +4,7 @@ import {
   Track,
   type RemoteParticipant,
   type RemoteTrackPublication,
+  type Participant,
   type AudioCaptureOptions,
 } from 'livekit-client';
 import { account } from './appwrite.js';
@@ -19,6 +20,7 @@ export interface VoiceCallbacks {
   onParticipantJoined?: (identity: string) => void;
   onParticipantLeft?: (identity: string) => void;
   onConnectionStateChange?: (connected: boolean) => void;
+  onActiveSpeakersChanged?: (speakerIdentities: string[]) => void;
 }
 
 /**
@@ -80,6 +82,10 @@ export async function joinVoice(
 
   room.on(RoomEvent.Connected, () => {
     callbacks?.onConnectionStateChange?.(true);
+  });
+
+  room.on(RoomEvent.ActiveSpeakersChanged, (speakers: Participant[]) => {
+    callbacks?.onActiveSpeakersChanged?.(speakers.map((s) => s.identity));
   });
 
   // Auto-subscribe to audio tracks

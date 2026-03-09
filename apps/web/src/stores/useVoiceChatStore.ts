@@ -18,6 +18,7 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
   const microphoneEnabled = ref(false);
   const speakerEnabled = ref(true);
   const participants = ref<string[]>([]);
+  const activeSpeakers = ref<Set<string>>(new Set());
   const error = ref<string | null>(null);
   const connecting = ref(false);
 
@@ -59,6 +60,9 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
             participants.value = getVoiceParticipants();
           }
         },
+        onActiveSpeakersChanged: (speakerIds) => {
+          activeSpeakers.value = new Set(speakerIds);
+        },
       });
 
       joined.value = true;
@@ -85,6 +89,7 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
     joined.value = false;
     microphoneEnabled.value = false;
     participants.value = [];
+    activeSpeakers.value = new Set();
   }
 
   async function setMicrophoneEnabled(enabled: boolean): Promise<void> {
@@ -145,6 +150,7 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
     microphoneEnabled,
     speakerEnabled,
     participants,
+    activeSpeakers,
     error,
     connecting,
     audioInputDevices,

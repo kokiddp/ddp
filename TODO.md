@@ -194,7 +194,7 @@ Target MVP criteria and current state:
 4. [x] Add rules profile selection and baseline CRUD path in web + persistence.
 5. [x] Improve voice robustness for permission denial and reconnect behavior.
 6. [~] Add component/store tests and at least one happy-path E2E flow.
-7. [ ] Fill `docs/architecture` with boundary and sequence diagrams.
+7. [x] Fill `docs/architecture` with boundary and sequence diagrams.
 
 ---
 

@@ -289,7 +289,7 @@ services:
 
   # ─── LiveKit ────────────────────────────────────────────────
   livekit:
-    image: livekit/livekit-server:v1.8
+    image: livekit/livekit-server:v1.9
     container_name: ddp-livekit
     restart: unless-stopped
     ports:

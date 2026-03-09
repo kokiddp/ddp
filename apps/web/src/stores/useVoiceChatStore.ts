@@ -17,6 +17,7 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
   const joined = ref(false);
   const microphoneEnabled = ref(false);
   const speakerEnabled = ref(true);
+  const reconnecting = ref(false);
   const participants = ref<string[]>([]);
   const activeSpeakers = ref<string[]>([]);
   const error = ref<string | null>(null);
@@ -31,6 +32,25 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
   // Audio level (0-1)
   const micLevel = ref(0);
   let stopLevelMonitor: (() => void) | null = null;
+
+  function clearMicMonitor(): void {
+    if (stopLevelMonitor) {
+      stopLevelMonitor();
+      stopLevelMonitor = null;
+    }
+    micLevel.value = 0;
+  }
+
+  function mapMicrophoneError(e: unknown): string {
+    const err = e as { name?: string; message?: string };
+    if (err?.name === 'NotAllowedError') {
+      return 'Microphone permission denied. Please allow microphone access in browser settings.';
+    }
+    if (err?.name === 'NotFoundError') {
+      return 'No microphone device was found.';
+    }
+    return err?.message ?? 'Microphone error';
+  }
 
   async function refreshDevices(): Promise<void> {
     try {
@@ -57,11 +77,24 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
         onConnectionStateChange: (connected) => {
           joined.value = connected;
           if (connected) {
+            reconnecting.value = false;
             participants.value = getVoiceParticipants();
+          } else {
+            clearMicMonitor();
+            microphoneEnabled.value = false;
           }
         },
         onActiveSpeakersChanged: (speakerIds) => {
           activeSpeakers.value = speakerIds;
+        },
+        onReconnecting: () => {
+          reconnecting.value = true;
+          error.value = 'Voice connection interrupted. Reconnecting...';
+        },
+        onReconnected: () => {
+          reconnecting.value = false;
+          error.value = null;
+          participants.value = getVoiceParticipants();
         },
       });
 
@@ -70,6 +103,7 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
       speakerEnabled.value = true;
       participants.value = getVoiceParticipants();
       await refreshDevices();
+      error.value = null;
       return true;
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Failed to join voice';
@@ -80,13 +114,10 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
   }
 
   async function leave(): Promise<void> {
-    if (stopLevelMonitor) {
-      stopLevelMonitor();
-      stopLevelMonitor = null;
-      micLevel.value = 0;
-    }
+    clearMicMonitor();
     await leaveVoice();
     joined.value = false;
+    reconnecting.value = false;
     microphoneEnabled.value = false;
     participants.value = [];
     activeSpeakers.value = [];
@@ -103,14 +134,12 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
         });
         await refreshDevices();
       } else {
-        if (stopLevelMonitor) {
-          stopLevelMonitor();
-          stopLevelMonitor = null;
-          micLevel.value = 0;
-        }
+        clearMicMonitor();
       }
     } catch (e: unknown) {
-      error.value = e instanceof Error ? e.message : 'Microphone error';
+      microphoneEnabled.value = false;
+      clearMicMonitor();
+      error.value = mapMicrophoneError(e);
     }
   }
 
@@ -151,6 +180,7 @@ export const useVoiceChatStore = defineStore('voiceChat', () => {
     speakerEnabled,
     participants,
     activeSpeakers,
+    reconnecting,
     error,
     connecting,
     audioInputDevices,

@@ -225,6 +225,7 @@ const micLevelBars = computed(() => {
           <div class="voice-panel__header">
             <h3>Voice Chat</h3>
             <span v-if="voiceStore.connecting" class="voice-connecting">Connecting...</span>
+            <span v-else-if="voiceStore.reconnecting" class="voice-connecting">Reconnecting...</span>
           </div>
 
           <div v-if="voiceStore.error" class="voice-error">{{ voiceStore.error }}</div>

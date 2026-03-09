@@ -192,7 +192,7 @@ Target MVP criteria and current state:
 2. [x] Implement missing user-critical profile/auth features: password reset, avatar upload, preferences UX.
 3. [~] Harden session membership and Appwrite permissions (including duplicate join handling).
 4. [x] Add rules profile selection and baseline CRUD path in web + persistence.
-5. [ ] Improve voice robustness for permission denial and reconnect behavior.
+5. [x] Improve voice robustness for permission denial and reconnect behavior.
 6. [ ] Add component/store tests and at least one happy-path E2E flow.
 7. [ ] Fill `docs/architecture` with boundary and sequence diagrams.
 

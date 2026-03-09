@@ -21,6 +21,8 @@ export interface VoiceCallbacks {
   onParticipantLeft?: (identity: string) => void;
   onConnectionStateChange?: (connected: boolean) => void;
   onActiveSpeakersChanged?: (speakerIdentities: string[]) => void;
+  onReconnecting?: () => void;
+  onReconnected?: () => void;
 }
 
 /**
@@ -81,6 +83,15 @@ export async function joinVoice(
   });
 
   room.on(RoomEvent.Connected, () => {
+    callbacks?.onConnectionStateChange?.(true);
+  });
+
+  room.on(RoomEvent.Reconnecting, () => {
+    callbacks?.onReconnecting?.();
+  });
+
+  room.on(RoomEvent.Reconnected, () => {
+    callbacks?.onReconnected?.();
     callbacks?.onConnectionStateChange?.(true);
   });
 

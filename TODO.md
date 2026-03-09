@@ -82,7 +82,7 @@ Evidence used:
 - [x] Campaign CRUD basics
 - [x] Session list/create/edit/cancel flows
 - [x] Session config includes max players, text toggle, voice toggle, campaign selection
-- [ ] Rules profile selection in session creation/edit UX
+- [x] Rules profile selection in session creation/edit UX
 - [x] Lobby supports join/leave, ready toggle, character binding, start action
 - [x] Host-driven session status transitions (`lobby`, `active`, `paused`, `ended`)
 - [ ] Invite-only/private session model
@@ -191,7 +191,7 @@ Target MVP criteria and current state:
 1. [x] Add CI workflow for lint, typecheck, unit tests, and environment-aware integration tests.
 2. [x] Implement missing user-critical profile/auth features: password reset, avatar upload, preferences UX.
 3. [~] Harden session membership and Appwrite permissions (including duplicate join handling).
-4. [ ] Add rules profile selection and baseline CRUD path in web + persistence.
+4. [x] Add rules profile selection and baseline CRUD path in web + persistence.
 5. [ ] Improve voice robustness for permission denial and reconnect behavior.
 6. [ ] Add component/store tests and at least one happy-path E2E flow.
 7. [ ] Fill `docs/architecture` with boundary and sequence diagrams.

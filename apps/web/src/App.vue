@@ -19,6 +19,7 @@ async function handleLogout() {
         <router-link to="/app/dashboard">Dashboard</router-link>
         <router-link to="/app/characters">Characters</router-link>
         <router-link to="/app/campaigns">Campaigns</router-link>
+        <router-link to="/app/rules-profiles">Rules Profiles</router-link>
         <router-link to="/app/sessions">Sessions</router-link>
       </nav>
       <div class="user-menu">

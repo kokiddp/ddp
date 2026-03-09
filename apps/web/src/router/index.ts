@@ -62,6 +62,11 @@ export const router = createRouter({
           component: () => import('../views/CampaignsView.vue'),
         },
         {
+          path: 'rules-profiles',
+          name: 'RulesProfiles',
+          component: () => import('../views/RulesProfilesView.vue'),
+        },
+        {
           path: 'sessions',
           name: 'Sessions',
           component: () => import('../views/SessionsView.vue'),

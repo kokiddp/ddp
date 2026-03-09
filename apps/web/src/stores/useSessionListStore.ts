@@ -59,7 +59,13 @@ export const useSessionListStore = defineStore('sessionList', () => {
 
   async function editSession(
     sessionId: string,
-    data: { title: string; textChatEnabled: boolean; voiceChatEnabled: boolean; maxPlayers: number },
+    data: {
+      title: string;
+      rulesProfileId: string | null;
+      textChatEnabled: boolean;
+      voiceChatEnabled: boolean;
+      maxPlayers: number;
+    },
   ): Promise<boolean> {
     error.value = null;
     try {

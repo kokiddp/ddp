@@ -54,6 +54,7 @@ export async function updateSession(
   data: Partial<{
     title: string;
     status: string;
+    rulesProfileId: string | null;
     textChatEnabled: boolean;
     voiceChatEnabled: boolean;
     maxPlayers: number;

@@ -5,6 +5,7 @@ import type { Models } from 'appwrite';
 import { useAuthStore } from '../stores/useAuthStore.js';
 import { useSessionListStore } from '../stores/useSessionListStore.js';
 import { listCampaigns } from '../services/campaign.service.js';
+import { listRulesProfiles } from '../services/rules-profile.service.js';
 
 const authStore = useAuthStore();
 const sessionStore = useSessionListStore();
@@ -12,9 +13,11 @@ const router = useRouter();
 
 const showForm = ref(false);
 const campaigns = ref<Models.Document[]>([]);
+const rulesProfiles = ref<Models.Document[]>([]);
 const form = ref({
   title: '',
   campaignId: '' as string,
+  rulesProfileId: '' as string,
   textChatEnabled: true,
   voiceChatEnabled: false,
   maxPlayers: 6,
@@ -25,10 +28,18 @@ onMounted(async () => {
   if (authStore.user) {
     campaigns.value = await listCampaigns(authStore.user.$id);
   }
+  rulesProfiles.value = await listRulesProfiles();
 });
 
 function resetForm() {
-  form.value = { title: '', campaignId: '', textChatEnabled: true, voiceChatEnabled: false, maxPlayers: 6 };
+  form.value = {
+    title: '',
+    campaignId: '',
+    rulesProfileId: '',
+    textChatEnabled: true,
+    voiceChatEnabled: false,
+    maxPlayers: 6,
+  };
   showForm.value = false;
 }
 
@@ -38,7 +49,7 @@ async function handleCreate() {
     title: form.value.title,
     hostUserId: authStore.user.$id,
     campaignId: form.value.campaignId || null,
-    rulesProfileId: null,
+    rulesProfileId: form.value.rulesProfileId || null,
     textChatEnabled: form.value.textChatEnabled,
     voiceChatEnabled: form.value.voiceChatEnabled,
     maxPlayers: form.value.maxPlayers,
@@ -56,6 +67,7 @@ function goToLobby(sessionId: string) {
 const editingSessionId = ref<string | null>(null);
 const editForm = ref({
   title: '',
+  rulesProfileId: '' as string,
   textChatEnabled: true,
   voiceChatEnabled: false,
   maxPlayers: 6,
@@ -79,10 +91,17 @@ function canEdit(session: Models.Document) {
   return isOwnSession(session) && (session['status'] === 'open' || session['status'] === 'draft');
 }
 
+function rulesProfileName(session: Models.Document): string | null {
+  if (!session['rulesProfileId']) return null;
+  const rp = rulesProfiles.value.find((p) => p.$id === session['rulesProfileId']);
+  return rp ? String(rp['name']) : null;
+}
+
 function startEdit(session: Models.Document) {
   editingSessionId.value = session.$id;
   editForm.value = {
     title: session['title'] as string,
+    rulesProfileId: String(session['rulesProfileId'] ?? ''),
     textChatEnabled: session['textChatEnabled'] as boolean,
     voiceChatEnabled: session['voiceChatEnabled'] as boolean,
     maxPlayers: session['maxPlayers'] as number,
@@ -97,6 +116,7 @@ async function handleEdit() {
   if (!editingSessionId.value) return;
   const updated = await sessionStore.editSession(editingSessionId.value, {
     title: editForm.value.title,
+    rulesProfileId: editForm.value.rulesProfileId || null,
     textChatEnabled: editForm.value.textChatEnabled,
     voiceChatEnabled: editForm.value.voiceChatEnabled,
     maxPlayers: editForm.value.maxPlayers,
@@ -133,6 +153,13 @@ async function handleCancel(sessionId: string) {
           <select id="campaign" v-model="form.campaignId">
             <option value="">— No campaign —</option>
             <option v-for="c in campaigns" :key="c.$id" :value="c.$id">{{ c.title }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="rulesProfile">Rules Profile</label>
+          <select id="rulesProfile" v-model="form.rulesProfileId">
+            <option value="">— No rules profile —</option>
+            <option v-for="rp in rulesProfiles" :key="rp.$id" :value="rp.$id">{{ rp.name }}</option>
           </select>
         </div>
         <div class="field">
@@ -177,6 +204,12 @@ async function handleCancel(sessionId: string) {
             <div class="field">
               <input v-model.number="editForm.maxPlayers" type="number" min="2" max="20" />
             </div>
+            <div class="field">
+              <select v-model="editForm.rulesProfileId">
+                <option value="">— No rules profile —</option>
+                <option v-for="rp in rulesProfiles" :key="rp.$id" :value="rp.$id">{{ rp.name }}</option>
+              </select>
+            </div>
             <div class="field-row">
               <label class="checkbox-label">
                 <input v-model="editForm.textChatEnabled" type="checkbox" />
@@ -200,6 +233,7 @@ async function handleCancel(sessionId: string) {
           <div class="session-meta">
             <span :class="statusBadgeClass(session.status)">{{ session.status }}</span>
             <span v-if="campaignName(session)" class="campaign-tag">{{ campaignName(session) }}</span>
+            <span v-if="rulesProfileName(session)" class="rules-tag">{{ rulesProfileName(session) }}</span>
             <span>{{ session.maxPlayers }} players max</span>
             <span v-if="session.textChatEnabled" class="feature">Text</span>
             <span v-if="session.voiceChatEnabled" class="feature">Voice</span>
@@ -341,6 +375,13 @@ async function handleCancel(sessionId: string) {
   border-radius: 4px;
   font-size: 0.7rem;
   color: #c0a0e0;
+}
+.rules-tag {
+  background: #173433;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  color: #8cd7cf;
 }
 .field select {
   width: 100%;

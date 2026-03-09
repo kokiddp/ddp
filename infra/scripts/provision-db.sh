@@ -9,15 +9,27 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-ENDPOINT="http://localhost/v1"
-PROJECT="ddp"
-DATABASE_ID="ddp"
 
-# Read API key from colyseus-server .env
-API_KEY=$(grep -oP 'APPWRITE_API_KEY=\K.+' "$ROOT/apps/colyseus-server/.env")
+# Read config from env vars first, then fall back to root .env, then per-service .env
+if [ -z "${APPWRITE_API_KEY:-}" ] && [ -f "$ROOT/.env" ]; then
+  set -a; source "$ROOT/.env"; set +a
+fi
+if [ -z "${APPWRITE_API_KEY:-}" ] && [ -f "$ROOT/apps/colyseus-server/.env" ]; then
+  APPWRITE_API_KEY=$(grep -oP 'APPWRITE_API_KEY=\K.+' "$ROOT/apps/colyseus-server/.env" || true)
+fi
+
+ENDPOINT="${APPWRITE_ENDPOINT:-http://localhost/v1}"
+PROJECT="${APPWRITE_PROJECT_ID:-ddp}"
+DATABASE_ID="ddp"
+API_KEY="${APPWRITE_API_KEY:-}"
+
+# For provisioning, always use localhost since we run against the local Docker stack
+# even if APPWRITE_ENDPOINT points to a public domain
+ENDPOINT="http://localhost:${APPWRITE_PORT:-80}/v1"
 
 if [ -z "$API_KEY" ]; then
-  echo "ERROR: APPWRITE_API_KEY not found in apps/colyseus-server/.env"
+  echo "ERROR: APPWRITE_API_KEY not set."
+  echo "Set it in .env or as an environment variable."
   exit 1
 fi
 

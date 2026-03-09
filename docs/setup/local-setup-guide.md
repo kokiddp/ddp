@@ -107,8 +107,14 @@ Edit `.env` and set `APPWRITE_API_KEY` to the key you created in the Appwrite Co
 ### Root `.env` reference
 
 ```env
-# ── App / Shared ──
+# ── General ──
 NODE_ENV=development
+
+# ── Domain & TLS ──
+_APP_DOMAIN=localhost         # leave as localhost for local dev
+ACME_EMAIL=                   # leave empty for local dev (no TLS)
+
+# ── Appwrite ──
 APPWRITE_ENDPOINT=http://localhost/v1
 APPWRITE_PROJECT_ID=ddp
 APPWRITE_API_KEY=              # paste your key here
@@ -147,6 +153,7 @@ LOG_LEVEL=info
 
 The `setup.sh` script reads this file and generates:
 - `infra/compose/.env` — Docker Compose variables
+- `infra/compose/livekit.yaml` — LiveKit server configuration
 - `apps/web/.env` — Vite build-time variables
 - `apps/colyseus-server/.env` — Colyseus runtime config
 - `apps/integration-api/.env` — Integration API runtime config

@@ -1,5 +1,7 @@
-# DDP local development infrastructure
-# Usage: docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d
+# DDP infrastructure and application services
+# Usage:
+#   Local dev:  docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d
+#   Full stack: docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env --profile app up -d --build
 
 x-appwrite-env: &appwrite-env
   _APP_ENV: ${_APP_ENV:-development}
@@ -8,15 +10,15 @@ x-appwrite-env: &appwrite-env
   _APP_CONSOLE_WHITELIST_ROOT: enabled
   _APP_CONSOLE_WHITELIST_EMAILS:
   _APP_CONSOLE_WHITELIST_IPS:
-  _APP_SYSTEM_EMAIL_NAME: DDP Dev
+  _APP_SYSTEM_EMAIL_NAME: DDP
   _APP_SYSTEM_EMAIL_ADDRESS: noreply@localhost
   _APP_SYSTEM_RESPONSE_FORMAT:
   _APP_OPTIONS_ABUSE: disabled
-  _APP_OPTIONS_FORCE_HTTPS: disabled
+  _APP_OPTIONS_FORCE_HTTPS: ${_APP_OPTIONS_FORCE_HTTPS:-disabled}
   _APP_OPENSSL_KEY_V1: ${_APP_OPENSSL_KEY_V1:-ddp-dev-openssl-key-change-in-prod}
-  _APP_DOMAIN: localhost
-  _APP_DOMAIN_TARGET: localhost
-  _APP_DOMAIN_FUNCTIONS: functions.localhost
+  _APP_DOMAIN: ${_APP_DOMAIN:-localhost}
+  _APP_DOMAIN_TARGET: ${_APP_DOMAIN:-localhost}
+  _APP_DOMAIN_FUNCTIONS: functions.${_APP_DOMAIN:-localhost}
   _APP_REDIS_HOST: redis
   _APP_REDIS_PORT: 6379
   _APP_DB_HOST: mariadb
@@ -42,8 +44,12 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`ddp`)
       - --providers.file.directory=/storage/config
       - --providers.file.watch=true
-      - --entrypoints.appwrite_web.address=:80
-      - --entrypoints.appwrite_websecure.address=:443
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      # ── Let's Encrypt (enabled when ACME_EMAIL is set) ──
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
     ports:
       - "${APPWRITE_PORT:-80}:80"
       - "${APPWRITE_SSL_PORT:-443}:443"
@@ -51,6 +57,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
       - appwrite-certificates:/storage/certificates:ro
+      - letsencrypt-data:/letsencrypt
     depends_on:
       - appwrite
     networks:
@@ -68,13 +75,16 @@ services:
       - traefik.constraint-label-stack=ddp
       - traefik.docker.network=appwrite
       - traefik.http.services.appwrite_api.loadbalancer.server.port=80
-      - traefik.http.routers.appwrite_api_http.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_api_http.rule=PathPrefix(`/`)
+      # HTTP
+      - traefik.http.routers.appwrite_api_http.entrypoints=web
+      - traefik.http.routers.appwrite_api_http.rule=PathPrefix(`/v1`)
       - traefik.http.routers.appwrite_api_http.service=appwrite_api
-      - traefik.http.routers.appwrite_api_https.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/`)
+      # HTTPS
+      - traefik.http.routers.appwrite_api_https.entrypoints=websecure
+      - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/v1`)
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
+      - traefik.http.routers.appwrite_api_https.tls.certresolver=letsencrypt
     volumes:
       - appwrite-uploads:/storage/uploads
       - appwrite-cache:/storage/cache
@@ -98,13 +108,14 @@ services:
       - traefik.constraint-label-stack=ddp
       - traefik.docker.network=appwrite
       - traefik.http.services.appwrite_console.loadbalancer.server.port=80
-      - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_console_http.entrypoints=web
       - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
       - traefik.http.routers.appwrite_console_http.service=appwrite_console
-      - traefik.http.routers.appwrite_console_https.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_console_https.entrypoints=websecure
       - traefik.http.routers.appwrite_console_https.rule=PathPrefix(`/console`)
       - traefik.http.routers.appwrite_console_https.service=appwrite_console
       - traefik.http.routers.appwrite_console_https.tls=true
+      - traefik.http.routers.appwrite_console_https.tls.certresolver=letsencrypt
 
   appwrite-realtime:
     image: appwrite/appwrite:1.6
@@ -118,13 +129,14 @@ services:
       - traefik.constraint-label-stack=ddp
       - traefik.docker.network=appwrite
       - traefik.http.services.appwrite_realtime.loadbalancer.server.port=80
-      - traefik.http.routers.appwrite_realtime_ws.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_realtime_ws.entrypoints=web
       - traefik.http.routers.appwrite_realtime_ws.rule=PathPrefix(`/v1/realtime`)
       - traefik.http.routers.appwrite_realtime_ws.service=appwrite_realtime
-      - traefik.http.routers.appwrite_realtime_wss.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_realtime_wss.entrypoints=websecure
       - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
       - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
       - traefik.http.routers.appwrite_realtime_wss.tls=true
+      - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=letsencrypt
     environment:
       <<: *appwrite-env
     depends_on:
@@ -296,12 +308,12 @@ services:
       - "${LIVEKIT_PORT:-7880}:7880"
       - "7881:7881"
       - "7882:7882/udp"
-    command: --config /etc/livekit.yaml --dev
+    command: --config /etc/livekit.yaml
     volumes:
       - ./livekit.yaml:/etc/livekit.yaml:ro
 
   # ─── DDP Application Services ───────────────────────────────────────────
-  # These are optional — only needed for containerised (non-dev) runs.
+  # These are optional — only started with --profile app.
   # For local development, use `pnpm dev` instead.
 
   ddp-web:
@@ -310,8 +322,25 @@ services:
       dockerfile: apps/web/Dockerfile
     container_name: ddp-web
     restart: unless-stopped
-    ports:
-      - "${WEB_PORT:-4173}:80"
+    networks:
+      - appwrite
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=ddp
+      - traefik.docker.network=appwrite
+      - traefik.http.services.ddp_web.loadbalancer.server.port=80
+      # HTTP — catch-all for the SPA (lowest priority via low number)
+      - traefik.http.routers.ddp_web_http.entrypoints=web
+      - traefik.http.routers.ddp_web_http.rule=PathPrefix(`/`)
+      - traefik.http.routers.ddp_web_http.service=ddp_web
+      - traefik.http.routers.ddp_web_http.priority=1
+      # HTTPS
+      - traefik.http.routers.ddp_web_https.entrypoints=websecure
+      - traefik.http.routers.ddp_web_https.rule=PathPrefix(`/`)
+      - traefik.http.routers.ddp_web_https.service=ddp_web
+      - traefik.http.routers.ddp_web_https.priority=1
+      - traefik.http.routers.ddp_web_https.tls=true
+      - traefik.http.routers.ddp_web_https.tls.certresolver=letsencrypt
     profiles: ["app"]
 
   ddp-colyseus:
@@ -320,17 +349,34 @@ services:
       dockerfile: apps/colyseus-server/Dockerfile
     container_name: ddp-colyseus
     restart: unless-stopped
-    ports:
-      - "${COLYSEUS_PORT:-2567}:2567"
+    networks:
+      - appwrite
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=ddp
+      - traefik.docker.network=appwrite
+      - traefik.http.services.ddp_colyseus.loadbalancer.server.port=2567
+      # HTTP
+      - traefik.http.routers.ddp_colyseus_http.entrypoints=web
+      - traefik.http.routers.ddp_colyseus_http.rule=PathPrefix(`/ws/colyseus`)
+      - traefik.http.routers.ddp_colyseus_http.service=ddp_colyseus
+      - traefik.http.routers.ddp_colyseus_http.middlewares=strip-colyseus-prefix
+      # HTTPS
+      - traefik.http.routers.ddp_colyseus_https.entrypoints=websecure
+      - traefik.http.routers.ddp_colyseus_https.rule=PathPrefix(`/ws/colyseus`)
+      - traefik.http.routers.ddp_colyseus_https.service=ddp_colyseus
+      - traefik.http.routers.ddp_colyseus_https.middlewares=strip-colyseus-prefix
+      - traefik.http.routers.ddp_colyseus_https.tls=true
+      - traefik.http.routers.ddp_colyseus_https.tls.certresolver=letsencrypt
+      # Strip /ws/colyseus prefix before forwarding
+      - traefik.http.middlewares.strip-colyseus-prefix.stripprefix.prefixes=/ws/colyseus
     environment:
       PORT: 2567
       NODE_ENV: ${NODE_ENV:-development}
-      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-http://appwrite/v1}
+      APPWRITE_ENDPOINT: http://appwrite/v1
       APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID:-ddp}
       APPWRITE_API_KEY: ${APPWRITE_API_KEY:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-    networks:
-      - appwrite
     profiles: ["app"]
 
   ddp-integration-api:
@@ -339,20 +385,37 @@ services:
       dockerfile: apps/integration-api/Dockerfile
     container_name: ddp-integration-api
     restart: unless-stopped
-    ports:
-      - "${INTEGRATION_API_PORT:-3100}:3100"
+    networks:
+      - appwrite
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=ddp
+      - traefik.docker.network=appwrite
+      - traefik.http.services.ddp_integration_api.loadbalancer.server.port=3100
+      # HTTP
+      - traefik.http.routers.ddp_integration_api_http.entrypoints=web
+      - traefik.http.routers.ddp_integration_api_http.rule=PathPrefix(`/api`)
+      - traefik.http.routers.ddp_integration_api_http.service=ddp_integration_api
+      - traefik.http.routers.ddp_integration_api_http.middlewares=strip-api-prefix
+      # HTTPS
+      - traefik.http.routers.ddp_integration_api_https.entrypoints=websecure
+      - traefik.http.routers.ddp_integration_api_https.rule=PathPrefix(`/api`)
+      - traefik.http.routers.ddp_integration_api_https.service=ddp_integration_api
+      - traefik.http.routers.ddp_integration_api_https.middlewares=strip-api-prefix
+      - traefik.http.routers.ddp_integration_api_https.tls=true
+      - traefik.http.routers.ddp_integration_api_https.tls.certresolver=letsencrypt
+      # Strip /api prefix before forwarding
+      - traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api
     environment:
       PORT: 3100
       NODE_ENV: ${NODE_ENV:-development}
-      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-http://appwrite/v1}
+      APPWRITE_ENDPOINT: http://appwrite/v1
       APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID:-ddp}
       APPWRITE_API_KEY: ${APPWRITE_API_KEY:-}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4173,http://localhost:5173}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-    networks:
-      - appwrite
     profiles: ["app"]
 
 networks:
@@ -367,3 +430,4 @@ volumes:
   appwrite-functions:
   mariadb-data:
   redis-data:
+  letsencrypt-data:

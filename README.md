@@ -943,7 +943,15 @@ pnpm dev
 
 ```bash
 cp .env.example .env        # edit APPWRITE_API_KEY
-./setup.sh --docker         # builds and runs everything in Docker
+./setup.sh --docker         # builds and runs everything in Docker (only needs Docker)
+```
+
+### Production deploy (VPS with auto-TLS)
+
+```bash
+cp .env.example .env
+# Set _APP_DOMAIN, ACME_EMAIL, generate secrets — see docs/setup/deploy-guide.md
+./setup.sh --docker
 ```
 
 ### Manual start (existing setup)
@@ -978,7 +986,7 @@ pnpm test:integration
 ### Infrastructure scripts
 
 - `setup.sh` — **One-command project setup** (env, deps, Docker, DB provisioning)
-- `setup.sh --docker` — Fully containerised setup (all services in Docker)
+- `setup.sh --docker` — Fully containerised setup (no Node.js needed, auto-TLS with Let's Encrypt)
 - `infra/scripts/dev-up.sh` — Start Docker infrastructure only
 - `infra/scripts/dev-down.sh` — Stop all Docker services
 - `infra/scripts/dev-reset.sh` — Stop and remove all volumes (full reset)

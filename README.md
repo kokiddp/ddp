@@ -928,17 +928,29 @@ At the time of writing, the stack selected here is compatible with a permissive 
 - pnpm 10+
 - Docker and Docker Compose
 
-### Quick start
+### Quick start (single command)
 
 ```bash
-# Start infrastructure (Appwrite, LiveKit, MariaDB, Redis, Traefik)
-infra/scripts/dev-up.sh
-
-# Install dependencies
-pnpm install
+# First time — sets up .env, installs deps, starts Docker infra, provisions DB
+cp .env.example .env        # edit APPWRITE_API_KEY after Appwrite first-time setup
+./setup.sh
 
 # Start all dev servers
 pnpm dev
+```
+
+### Fully containerised (no local Node.js required)
+
+```bash
+cp .env.example .env        # edit APPWRITE_API_KEY
+./setup.sh --docker         # builds and runs everything in Docker
+```
+
+### Manual start (existing setup)
+
+```bash
+infra/scripts/dev-up.sh     # start Docker infrastructure only
+pnpm dev                    # start app dev servers
 ```
 
 ### Services (local)
@@ -965,9 +977,12 @@ pnpm test:integration
 
 ### Infrastructure scripts
 
-- `infra/scripts/dev-up.sh` — Start all Docker services
+- `setup.sh` — **One-command project setup** (env, deps, Docker, DB provisioning)
+- `setup.sh --docker` — Fully containerised setup (all services in Docker)
+- `infra/scripts/dev-up.sh` — Start Docker infrastructure only
 - `infra/scripts/dev-down.sh` — Stop all Docker services
 - `infra/scripts/dev-reset.sh` — Stop and remove all volumes (full reset)
+- `infra/scripts/provision-db.sh` — Create Appwrite database collections
 
 ---
 

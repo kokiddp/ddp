@@ -300,6 +300,61 @@ services:
     volumes:
       - ./livekit.yaml:/etc/livekit.yaml:ro
 
+  # ─── DDP Application Services ───────────────────────────────────────────
+  # These are optional — only needed for containerised (non-dev) runs.
+  # For local development, use `pnpm dev` instead.
+
+  ddp-web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    container_name: ddp-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-4173}:80"
+    profiles: ["app"]
+
+  ddp-colyseus:
+    build:
+      context: ../..
+      dockerfile: apps/colyseus-server/Dockerfile
+    container_name: ddp-colyseus
+    restart: unless-stopped
+    ports:
+      - "${COLYSEUS_PORT:-2567}:2567"
+    environment:
+      PORT: 2567
+      NODE_ENV: ${NODE_ENV:-development}
+      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-http://appwrite/v1}
+      APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID:-ddp}
+      APPWRITE_API_KEY: ${APPWRITE_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks:
+      - appwrite
+    profiles: ["app"]
+
+  ddp-integration-api:
+    build:
+      context: ../..
+      dockerfile: apps/integration-api/Dockerfile
+    container_name: ddp-integration-api
+    restart: unless-stopped
+    ports:
+      - "${INTEGRATION_API_PORT:-3100}:3100"
+    environment:
+      PORT: 3100
+      NODE_ENV: ${NODE_ENV:-development}
+      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-http://appwrite/v1}
+      APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID:-ddp}
+      APPWRITE_API_KEY: ${APPWRITE_API_KEY:-}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4173,http://localhost:5173}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks:
+      - appwrite
+    profiles: ["app"]
+
 networks:
   appwrite:
     name: appwrite

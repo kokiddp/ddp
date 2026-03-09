@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/dist
+**/.env
+.git
+.claude
+docs
+tests
+*.md
+!pnpm-workspace.yaml
+!package.json
+!pnpm-lock.yaml
+!tsconfig.base.json

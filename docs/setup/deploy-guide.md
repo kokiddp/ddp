@@ -52,31 +52,51 @@ cd /opt/ddp
 
 ## Step 2: Configure Environment Variables
 
-### infra/compose/.env
-
-Create or update the Compose environment file:
+DDP uses a **single root `.env`** file. The `setup.sh` script generates all per-service env files from it.
 
 ```bash
-cp infra/compose/.env.example infra/compose/.env
+cp .env.example .env
 ```
 
-Edit `infra/compose/.env`:
+Edit `.env` for production:
 
 ```env
-# Domain configuration
-_APP_ENV=production
-_APP_DOMAIN=your-domain.com
-_APP_DOMAIN_TARGET=your-domain.com
-_APP_DOMAIN_FUNCTIONS=functions.your-domain.com
+# ── App / Shared ──
+NODE_ENV=production
+APPWRITE_ENDPOINT=https://your-domain.com/v1
+APPWRITE_PROJECT_ID=ddp
+APPWRITE_API_KEY=<your-appwrite-api-key>
 
-# Security — CHANGE THESE
+# ── Docker infrastructure ──
+_APP_ENV=production
 _APP_OPENSSL_KEY_V1=<generate-a-random-64-char-string>
 _APP_DB_PASS=<strong-database-password>
+MYSQL_ROOT_PASSWORD=<strong-root-password>
+_APP_OPTIONS_FORCE_HTTPS=enabled
 
-# Ports (if using reverse proxy, these can be internal-only)
+# ── LiveKit ──
+LIVEKIT_API_KEY=<your-livekit-api-key>
+LIVEKIT_API_SECRET=<your-livekit-api-secret>
+LIVEKIT_URL=wss://your-domain.com:7880
+
+# ── Ports ──
 APPWRITE_PORT=80
 APPWRITE_SSL_PORT=443
 LIVEKIT_PORT=7880
+COLYSEUS_PORT=2567
+INTEGRATION_API_PORT=3100
+WEB_PORT=4173
+
+# ── Web client (Vite) ──
+VITE_APPWRITE_ENDPOINT=https://your-domain.com/v1
+VITE_APPWRITE_PROJECT_ID=ddp
+VITE_COLYSEUS_URL=wss://your-domain.com:2567
+VITE_INTEGRATION_API_URL=https://your-domain.com:3100
+VITE_LIVEKIT_URL=wss://your-domain.com:7880
+
+# ── Integration API ──
+CORS_ORIGINS=https://your-domain.com
+LOG_LEVEL=info
 ```
 
 Generate secure values:
@@ -85,43 +105,14 @@ Generate secure values:
 # OpenSSL key
 openssl rand -hex 32
 
-# Database password
+# Database passwords
 openssl rand -base64 24
-```
 
-### apps/colyseus-server/.env
+# LiveKit API key
+openssl rand -hex 8
 
-```env
-PORT=2567
-NODE_ENV=production
-APPWRITE_ENDPOINT=https://your-domain.com/v1
-APPWRITE_PROJECT_ID=ddp
-APPWRITE_API_KEY=<your-appwrite-api-key>
-LOG_LEVEL=info
-```
-
-### apps/integration-api/.env
-
-```env
-PORT=3100
-NODE_ENV=production
-APPWRITE_ENDPOINT=https://your-domain.com/v1
-APPWRITE_PROJECT_ID=ddp
-APPWRITE_API_KEY=<your-appwrite-api-key>
-LIVEKIT_API_KEY=<your-livekit-api-key>
-LIVEKIT_API_SECRET=<your-livekit-api-secret>
-CORS_ORIGINS=https://your-domain.com,https://app.your-domain.com
-LOG_LEVEL=info
-```
-
-### apps/web/.env
-
-```env
-VITE_APPWRITE_ENDPOINT=https://your-domain.com/v1
-VITE_APPWRITE_PROJECT_ID=ddp
-VITE_COLYSEUS_URL=wss://your-domain.com:2567
-VITE_INTEGRATION_API_URL=https://your-domain.com:3100
-VITE_LIVEKIT_URL=wss://your-domain.com:7880
+# LiveKit API secret
+openssl rand -hex 32
 ```
 
 ---
@@ -276,41 +267,46 @@ server {
 
 ## Step 5: Build and Deploy Application Services
 
-### Build the web client
+### Option A: Fully containerised (recommended)
+
+The simplest approach — all services run in Docker alongside the infrastructure:
+
+```bash
+cd /opt/ddp
+./setup.sh --docker
+```
+
+This single command:
+1. Generates per-service `.env` files from the root `.env`
+2. Installs pnpm dependencies
+3. Builds Docker images for web, Colyseus, and integration API
+4. Starts all Docker containers (infra + apps)
+5. Waits for Appwrite to be healthy
+6. Provisions the database (if `APPWRITE_API_KEY` is set)
+
+The Dockerfiles use multi-stage builds for small production images:
+- `apps/web/Dockerfile` — builds the Vue SPA, serves via nginx
+- `apps/colyseus-server/Dockerfile` — builds and runs with Node.js
+- `apps/integration-api/Dockerfile` — builds and runs with Node.js
+
+### Option B: Manual build with process manager
+
+If you prefer to run Node.js services outside Docker:
 
 ```bash
 cd /opt/ddp
 
-# Install dependencies
+# Run setup (infra-only, no --docker flag)
+./setup.sh
+
+# Or manually:
 pnpm install
-
-# Build shared packages first
-cd packages/shared-types && pnpm build && cd ../..
-cd packages/shared-rules && pnpm build && cd ../..
-
-# Build the web client
-cd apps/web && pnpm build
+pnpm --filter @ddp/shared-types run build
+pnpm --filter @ddp/shared-rules run build
+pnpm --filter web run build
+pnpm --filter colyseus-server run build
+pnpm --filter integration-api run build
 ```
-
-The built files are in `apps/web/dist/`. Serve them with any static file server (nginx, Caddy, etc.) or from the same Traefik instance.
-
-### Build the Colyseus server
-
-```bash
-cd /opt/ddp/apps/colyseus-server
-pnpm build
-```
-
-### Build the Integration API
-
-```bash
-cd /opt/ddp/apps/integration-api
-pnpm build
-```
-
-### Run server processes
-
-Use a process manager like **pm2** or **systemd** for the Node.js services:
 
 #### With pm2
 
@@ -329,6 +325,8 @@ pm2 start dist/index.js --name ddp-integration-api
 pm2 save
 pm2 startup
 ```
+
+Serve `apps/web/dist/` with nginx or another static file server.
 
 #### With systemd
 
@@ -380,13 +378,17 @@ sudo systemctl start ddp-colyseus ddp-integration-api
 
 ---
 
-## Step 6: Start Docker Infrastructure
+## Step 6: Start Infrastructure (if not using `setup.sh --docker`)
+
+If you used `setup.sh --docker` in Step 5, skip to Step 7 — the infrastructure is already running.
+
+For manual infra setup:
 
 ```bash
 cd /opt/ddp
 
-# Remove --dev flag from LiveKit command in docker-compose.yml for production
-# Edit: command: --config /etc/livekit.yaml
+# IMPORTANT: Remove --dev flag from LiveKit command in docker-compose.yml for production
+# Edit livekit service: command: --config /etc/livekit.yaml
 # (remove the --dev flag)
 
 # Start infrastructure
@@ -408,19 +410,19 @@ docker compose -f infra/compose/docker-compose.yml ps
 3. Create a project named **ddp** with project ID **ddp**
 4. Add a **Web** platform with your production domain
 5. Create a server API key with full permissions
-6. Copy the API key into the server `.env` files
+6. Paste the API key into the root `.env` as `APPWRITE_API_KEY`
+7. Re-run `./setup.sh --docker` to regenerate env files and provision the database
 
-### Provision the database
+### Manual database provisioning
+
+If you prefer not to re-run setup:
 
 ```bash
-# Set environment variables for the script
-export APPWRITE_ENDPOINT=https://your-domain.com/v1
-export APPWRITE_PROJECT_ID=ddp
-export APPWRITE_API_KEY=<your-api-key>
-
 cd /opt/ddp
 infra/scripts/provision-db.sh
 ```
+
+The script reads `APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`, and `APPWRITE_API_KEY` from the environment or `.env` files.
 
 ---
 
@@ -558,29 +560,35 @@ Set up periodic health checks with your monitoring tool:
 
 ## Updating
 
+### Containerised deployment (`setup.sh --docker`)
+
 ```bash
 cd /opt/ddp
-
-# Pull latest code
 git pull origin master
+./setup.sh --docker   # rebuilds images, restarts containers
+```
 
-# Install dependencies
+### Manual deployment
+
+```bash
+cd /opt/ddp
+git pull origin master
 pnpm install
 
 # Rebuild shared packages
-cd packages/shared-types && pnpm build && cd ../..
-cd packages/shared-rules && pnpm build && cd ../..
+pnpm --filter @ddp/shared-types run build
+pnpm --filter @ddp/shared-rules run build
 
 # Rebuild application services
-cd apps/web && pnpm build && cd ../..
-cd apps/colyseus-server && pnpm build && cd ../..
-cd apps/integration-api && pnpm build && cd ../..
+pnpm --filter web run build
+pnpm --filter colyseus-server run build
+pnpm --filter integration-api run build
 
 # Restart Node.js services
 pm2 restart ddp-colyseus ddp-integration-api
 # or: sudo systemctl restart ddp-colyseus ddp-integration-api
 
-# Update Docker services if needed
+# Update Docker infrastructure if needed
 docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d --pull always
 ```
 
@@ -600,7 +608,7 @@ docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env
 
 ### Appwrite returns 401/403
 
-1. Verify API key in `.env` files matches Appwrite Console
+1. Verify `APPWRITE_API_KEY` in the root `.env` matches Appwrite Console
 2. Check that project ID is `ddp`
 3. Ensure database is provisioned: `infra/scripts/provision-db.sh`
 4. Check Appwrite logs: `docker logs ddp-appwrite`
@@ -608,13 +616,13 @@ docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env
 ### Chat messages not persisting
 
 1. Check Colyseus server logs for Appwrite errors
-2. Verify `APPWRITE_API_KEY` is set (not empty) in `apps/colyseus-server/.env`
-3. Ensure `dotenv` is loading the `.env` file (first line: `import 'dotenv/config'`)
+2. Verify `APPWRITE_API_KEY` is set (not empty) in root `.env`
+3. Re-run `./setup.sh --docker` to regenerate per-service env files
 
 ### CORS errors in browser
 
-1. Set `CORS_ORIGINS` in integration API `.env` to include your production domain
-2. Restart the integration API after changing env vars
+1. Set `CORS_ORIGINS` in root `.env` to include your production domain
+2. Re-run `./setup.sh --docker` or restart the integration API after changing env vars
 3. Verify the `Origin` header in browser dev tools matches the allowed origins
 
 ### Colyseus WebSocket connection fails

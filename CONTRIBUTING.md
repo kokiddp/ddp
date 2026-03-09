@@ -15,18 +15,16 @@ Thank you for your interest in contributing to DDP. This guide covers the essent
 git clone <repo-url>
 cd ddp
 
-# Start infrastructure
-infra/scripts/dev-up.sh
-
-# Provision the database (first time only)
-infra/scripts/provision-db.sh
-
-# Install dependencies
-pnpm install
+# One-command setup (installs deps, starts Docker infra, provisions DB)
+cp .env.example .env
+# (optional) edit .env to set APPWRITE_API_KEY if you already have one
+./setup.sh
 
 # Start all dev servers
 pnpm dev
 ```
+
+Or use `./setup.sh --docker` to run everything (including app services) in Docker.
 
 See [docs/setup/local-setup-guide.md](docs/setup/local-setup-guide.md) for a detailed walkthrough.
 

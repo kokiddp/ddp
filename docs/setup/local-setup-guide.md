@@ -20,7 +20,35 @@ docker --version  # Docker version 20+
 docker compose version
 ```
 
-## Step 1: Clone and install
+## Quick start (single command)
+
+If you just want to get running fast:
+
+```bash
+git clone <repo-url>
+cd ddp
+cp .env.example .env
+# (optional) edit .env to set APPWRITE_API_KEY if you already have one
+./setup.sh
+pnpm dev
+```
+
+This handles everything: dependencies, Docker infra, database provisioning, and env file generation. See below for the step-by-step breakdown.
+
+### Fully containerised (no local Node.js)
+
+```bash
+cp .env.example .env
+./setup.sh --docker
+```
+
+All services (web, Colyseus, integration API) run in Docker alongside the infrastructure. Useful for testing production-like builds.
+
+---
+
+## Step-by-step guide
+
+### Step 1: Clone and install
 
 ```bash
 git clone <repo-url>
@@ -68,48 +96,62 @@ This creates the `ddp` database with all required collections:
 
 ## Step 3: Configure environment variables
 
-Each service needs a `.env` file. Copy from the examples:
+DDP uses a **single root `.env`** file. The `setup.sh` script (or manual steps) generates per-service `.env` files from it.
 
 ```bash
-cp apps/web/.env.example apps/web/.env
-cp apps/colyseus-server/.env.example apps/colyseus-server/.env
-cp apps/integration-api/.env.example apps/integration-api/.env
+cp .env.example .env
 ```
 
-Update the `APPWRITE_API_KEY` in both server `.env` files with the key you created in the Appwrite Console.
+Edit `.env` and set `APPWRITE_API_KEY` to the key you created in the Appwrite Console. All other defaults work out of the box for local development.
 
-### Environment variable reference
+### Root `.env` reference
 
-#### apps/web/.env
-```
+```env
+# ── App / Shared ──
+NODE_ENV=development
+APPWRITE_ENDPOINT=http://localhost/v1
+APPWRITE_PROJECT_ID=ddp
+APPWRITE_API_KEY=              # paste your key here
+
+# ── Docker infrastructure ──
+_APP_ENV=development
+_APP_OPENSSL_KEY_V1=ddp-dev-openssl-key-change-in-prod
+_APP_DB_PASS=password
+MYSQL_ROOT_PASSWORD=rootpassword
+_APP_OPTIONS_FORCE_HTTPS=disabled
+
+# ── LiveKit ──
+LIVEKIT_API_KEY=devkey
+LIVEKIT_API_SECRET=secret
+LIVEKIT_URL=ws://localhost:7880
+
+# ── Ports ──
+APPWRITE_PORT=80
+APPWRITE_SSL_PORT=443
+LIVEKIT_PORT=7880
+COLYSEUS_PORT=2567
+INTEGRATION_API_PORT=3100
+WEB_PORT=5173
+
+# ── Web client (Vite) ──
 VITE_APPWRITE_ENDPOINT=http://localhost/v1
 VITE_APPWRITE_PROJECT_ID=ddp
 VITE_COLYSEUS_URL=ws://localhost:2567
 VITE_INTEGRATION_API_URL=http://localhost:3100
 VITE_LIVEKIT_URL=ws://localhost:7880
-```
 
-#### apps/colyseus-server/.env
-```
-PORT=2567
-NODE_ENV=development
-APPWRITE_ENDPOINT=http://localhost/v1
-APPWRITE_PROJECT_ID=ddp
-APPWRITE_API_KEY=<your-api-key>
-```
-
-#### apps/integration-api/.env
-```
-PORT=3100
-NODE_ENV=development
-APPWRITE_ENDPOINT=http://localhost/v1
-APPWRITE_PROJECT_ID=ddp
-APPWRITE_API_KEY=<your-api-key>
-LIVEKIT_API_KEY=devkey
-LIVEKIT_API_SECRET=secret
-LIVEKIT_URL=ws://localhost:7880
+# ── Integration API ──
 CORS_ORIGINS=http://localhost:4173,http://localhost:5173
+LOG_LEVEL=info
 ```
+
+The `setup.sh` script reads this file and generates:
+- `infra/compose/.env` — Docker Compose variables
+- `apps/web/.env` — Vite build-time variables
+- `apps/colyseus-server/.env` — Colyseus runtime config
+- `apps/integration-api/.env` — Integration API runtime config
+
+> **Manual alternative:** If you prefer not to use `setup.sh`, you can still create per-service `.env` files by hand — see each app's `.env.example`.
 
 ## Step 4: Start development servers
 

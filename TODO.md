@@ -153,7 +153,7 @@ Evidence used:
 - [x] Unit tests exist and pass locally (`tests/unit/logger.test.ts`, `tests/unit/shared-rules.test.ts`)
 - [x] Integration test suite exists for auth, infrastructure, session lifecycle, snapshots, text messages, and voice token authorization
 - [~] Integration suite reliability depends on environment readiness (Appwrite/API key/services); not all tests pass in current local state
-- [ ] Store-level unit tests for web state logic
+- [x] Store-level unit tests for web state logic
 - [ ] Component tests for Vue views/components
 - [ ] End-to-end journey tests
 
@@ -193,7 +193,7 @@ Target MVP criteria and current state:
 3. [~] Harden session membership and Appwrite permissions (including duplicate join handling).
 4. [x] Add rules profile selection and baseline CRUD path in web + persistence.
 5. [x] Improve voice robustness for permission denial and reconnect behavior.
-6. [ ] Add component/store tests and at least one happy-path E2E flow.
+6. [~] Add component/store tests and at least one happy-path E2E flow.
 7. [ ] Fill `docs/architecture` with boundary and sequence diagrams.
 
 ---

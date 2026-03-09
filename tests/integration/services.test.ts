@@ -5,25 +5,33 @@
  * then shut it down.
  */
 import { describe, it, expect } from 'vitest';
-import { spawn, type ChildProcess } from 'node:child_process';
+import { execSync, spawn, type ChildProcess } from 'node:child_process';
 import { resolve } from 'node:path';
-import { homedir } from 'node:os';
 
 const ROOT = resolve(import.meta.dirname, '../..');
-const NVM_DIR = process.env['NVM_DIR'] ?? resolve(homedir(), '.nvm');
+
+function killPortIfOccupied(port: number): void {
+  try {
+    execSync(`kill $(lsof -ti:${port}) 2>/dev/null`);
+  } catch {
+    // No process on this port (or lsof unavailable) — continue.
+  }
+}
 
 function startServer(
   cwd: string,
   port: number,
 ): Promise<{ proc: ChildProcess; stop: () => void }> {
   return new Promise((resolvePromise, reject) => {
+    killPortIfOccupied(port);
+
     const proc = spawn(
-      'bash',
-      ['-c', `source "${NVM_DIR}/nvm.sh" --no-use 2>/dev/null && nvm use v20.20.0 > /dev/null 2>&1 && npx tsx src/index.ts`],
+      'pnpm',
+      ['exec', 'tsx', 'src/index.ts'],
       {
         cwd,
         stdio: 'pipe',
-        env: { ...process.env, PORT: String(port), NVM_DIR },
+        env: { ...process.env, PORT: String(port) },
       },
     );
 

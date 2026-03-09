@@ -4,7 +4,7 @@
  * Prerequisites: docker compose stack running, 'ddp' project created,
  * localhost web platform added.
  */
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 
 const ENDPOINT = 'http://localhost/v1';
 const PROJECT = 'ddp';

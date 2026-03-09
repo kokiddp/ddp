@@ -8,6 +8,12 @@ importers:
 
   .:
     devDependencies:
+      '@ddp/eslint-config':
+        specifier: workspace:*
+        version: link:packages/eslint-config
+      eslint:
+        specifier: ^9.39.0
+        version: 9.39.4
       prettier:
         specifier: ^3.3.0
         version: 3.8.1

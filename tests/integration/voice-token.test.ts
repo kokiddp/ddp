@@ -7,10 +7,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { resolve } from 'node:path';
-import { homedir } from 'node:os';
 
 const ROOT = resolve(import.meta.dirname, '../..');
-const NVM_DIR = process.env['NVM_DIR'] ?? resolve(homedir(), '.nvm');
 const API_PORT = 19200;
 const API_URL = `http://localhost:${API_PORT}`;
 
@@ -47,12 +45,12 @@ const testPassword = 'test-password-123';
 function startApi(): Promise<ChildProcess> {
   return new Promise((resolvePromise, reject) => {
     const proc = spawn(
-      'bash',
-      ['-c', `source "${NVM_DIR}/nvm.sh" --no-use 2>/dev/null && nvm use v20.20.0 > /dev/null 2>&1 && npx tsx src/index.ts`],
+      'pnpm',
+      ['exec', 'tsx', 'src/index.ts'],
       {
         cwd: resolve(ROOT, 'apps/integration-api'),
         stdio: 'pipe',
-        env: { ...process.env, PORT: String(API_PORT), NVM_DIR },
+        env: { ...process.env, PORT: String(API_PORT) },
       },
     );
 

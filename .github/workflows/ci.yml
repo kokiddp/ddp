@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      runFullIntegration:
+        description: 'Run full Appwrite-backed integration suite (requires configured secrets)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  checks:
+    name: Lint, Typecheck, Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm vitest run tests/unit
+
+  integration-smoke:
+    name: Integration Smoke (Service Startup)
+    runs-on: ubuntu-latest
+    needs: checks
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run services integration smoke test
+        run: pnpm vitest run tests/integration/services.test.ts
+
+  integration-full:
+    name: Full Integration Suite (Environment-Aware)
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.runFullIntegration }}
+    runs-on: ubuntu-latest
+    needs: checks
+    timeout-minutes: 30
+    env:
+      APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
+      APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
+      APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate integration environment
+        run: |
+          if [ -z "${APPWRITE_ENDPOINT}" ] || [ -z "${APPWRITE_PROJECT_ID}" ] || [ -z "${APPWRITE_API_KEY}" ]; then
+            echo "Missing required secrets: APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_API_KEY"
+            exit 1
+          fi
+
+      - name: Write Appwrite credentials for integration tests
+        run: |
+          cat > apps/colyseus-server/.env << 'EOF'
+          APPWRITE_ENDPOINT=${APPWRITE_ENDPOINT}
+          APPWRITE_PROJECT_ID=${APPWRITE_PROJECT_ID}
+          APPWRITE_API_KEY=${APPWRITE_API_KEY}
+          EOF
+
+      - name: Run integration tests
+        run: pnpm test:integration

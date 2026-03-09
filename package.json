@@ -13,8 +13,8 @@
   "scripts": {
     "dev": "pnpm -r --parallel run dev",
     "build": "pnpm -r run build",
-    "lint": "pnpm -r run lint",
-    "lint:fix": "pnpm -r run lint:fix",
+    "lint": "pnpm exec eslint .",
+    "lint:fix": "pnpm exec eslint . --fix",
     "typecheck": "pnpm -r run typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -23,6 +23,8 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@ddp/eslint-config": "workspace:*",
+    "eslint": "^9.39.0",
     "prettier": "^3.3.0",
     "typescript": "^5.6.0",
     "vitest": "^4.0.18"

@@ -309,7 +309,7 @@ const micLevelBars = computed(() => {
                 v-for="p in voiceStore.participants"
                 :key="p"
                 class="voice-participant"
-                :class="{ 'voice-participant--speaking': voiceStore.activeSpeakers.has(p) }"
+                :class="{ 'voice-participant--speaking': voiceStore.activeSpeakers.includes(p) }"
                 :title="getTooltip(p)"
               >{{ getDisplayName(p) }}</span>
             </div>

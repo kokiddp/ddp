@@ -3,7 +3,11 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ddp/shared-types": ["../shared-types/src/index.ts"]
+    }
   },
   "references": [
     { "path": "../shared-types" }

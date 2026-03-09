@@ -156,6 +156,8 @@ LiveKit is responsible for:
 - voice room connectivity
 - media publication/subscription
 - mute/unmute and local media control
+- active speaker detection (`ActiveSpeakersChanged` event)
+- device enumeration and switching (`Room.getLocalDevices`, `switchActiveDevice`)
 
 Agents must not:
 - generate LiveKit tokens in the frontend
@@ -319,16 +321,20 @@ A useful pattern is:
 ## Rules for LiveKit usage
 
 LiveKit integration must follow these invariants:
-- room naming must be deterministic
-- token issuance must happen on trusted backend code only
+- room naming must be deterministic (`ddp-session-<sessionId>`)
+- token issuance must happen on trusted backend code only (integration API)
 - voice join is optional and controlled by session configuration plus player choice
 - microphone state and voice-room presence are not the same thing
+- device selection uses `Room.getLocalDevices()` and `switchActiveDevice()`
+- active speaker detection uses `RoomEvent.ActiveSpeakersChanged`
+- mic level monitoring uses Web Audio API `AnalyserNode` (not LiveKit's built-in)
 
 Agents should ensure UI models reflect the distinction between:
 - feature enabled for session
 - player joined voice room
 - player microphone active
 - player speaker active
+- player currently speaking (detected by LiveKit, shown as UI highlight)
 
 ---
 

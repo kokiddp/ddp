@@ -19,6 +19,7 @@ All DDP services expose health check endpoints for monitoring and orchestration.
 | URL | `GET /health` |
 | Default port | `3100` |
 | Response | `{ "status": "ok", "service": "ddp-integration-api" }` |
+| CORS | Controlled by `CORS_ORIGINS` env var (default: `http://localhost:4173,http://localhost:5173`) |
 
 ### Appwrite
 

@@ -108,6 +108,7 @@ APPWRITE_API_KEY=<your-api-key>
 LIVEKIT_API_KEY=devkey
 LIVEKIT_API_SECRET=secret
 LIVEKIT_URL=ws://localhost:7880
+CORS_ORIGINS=http://localhost:4173,http://localhost:5173
 ```
 
 ## Step 4: Start development servers
@@ -147,10 +148,21 @@ cd apps/integration-api && pnpm dev
 1. Open http://localhost:5173
 2. Register a new account
 3. Create a character
-4. Create a session (enable text and voice chat)
-5. Join the session lobby
-6. Start the session
-7. Verify the play view loads with chat panel and voice controls
+4. Create a campaign, note the campaign name
+5. Create a session (enable text and voice chat, associate with campaign)
+6. Join the session lobby
+7. Start the session
+8. Verify the play view loads with:
+   - Campaign name in the header
+   - Chat panel showing character names (hover for tooltip with user name and ID)
+   - Voice controls (Join Voice button)
+9. Join voice chat and verify:
+   - Input/output device selectors appear
+   - Mic level indicator shows bars when speaking
+   - Participant list shows character names (not user IDs)
+   - Active speaker names glow green when speaking
+10. Open a second browser/incognito window, register another account, join the same session
+11. Send text messages between both clients — verify messages persist after page reload
 
 ## Running tests
 

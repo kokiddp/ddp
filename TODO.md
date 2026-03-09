@@ -326,9 +326,10 @@ The roadmap is organized from foundation to progressively more advanced capabili
 
 ### Client features
 - [x] Create session text chat panel
-- [x] Load chat history for session
-- [x] Subscribe to realtime new-message updates
-- [x] Send text messages
+- [x] Load chat history for session (persisted via Appwrite, restored on reconnect)
+- [x] Subscribe to realtime new-message updates via Colyseus broadcast
+- [x] Send text messages with character name resolution
+- [x] Display sender character name (with tooltip showing user name and ID)
 - [x] Display system messages distinctly
 - [x] Handle disabled-text-chat sessions gracefully
 
@@ -343,8 +344,8 @@ The roadmap is organized from foundation to progressively more advanced capabili
 
 ### LiveKit infrastructure
 - [x] Finalize local LiveKit deployment config
-- [ ] Document prod deployment expectations
-- [x] Define deterministic room naming convention
+- [x] Document prod deployment expectations (in deploy guide)
+- [x] Define deterministic room naming convention (`ddp-session-<sessionId>`)
 
 ### Token issuance
 - [x] Implement trusted backend endpoint/function to issue LiveKit tokens
@@ -358,7 +359,11 @@ The roadmap is organized from foundation to progressively more advanced capabili
 - [x] Add “Leave voice” action
 - [x] Add microphone toggle
 - [x] Add speaker/deafen toggle
-- [x] Show current voice participants
+- [x] Show current voice participants with character names
+- [x] Add input/output device selection
+- [x] Add real-time mic level indicator
+- [x] Highlight active speakers in voice participant list
+- [x] Add tooltips on participant names (character name, user name, ID)
 - [ ] Handle reconnect or dropped media connection
 - [ ] Handle denied microphone permission gracefully
 
@@ -518,9 +523,9 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 ## 19. Documentation backlog
 
 ### Core docs
-- [ ] Keep `README.md` updated as architecture evolves
-- [ ] Keep `AGENTS.md` updated with contribution rules
-- [ ] Keep `TODO.md` aligned with actual progress
+- [x] Keep `README.md` updated as architecture evolves
+- [x] Keep `AGENTS.md` updated with contribution rules
+- [x] Keep `TODO.md` aligned with actual progress
 
 ### Architecture docs
 - [ ] Create system context diagram
@@ -535,8 +540,8 @@ This service may be thin, but it is still useful as a place for trusted orchestr
 - [ ] Document extension strategy
 
 ### Setup docs
-- [ ] Create local setup guide
-- [ ] Create production deployment guide
+- [x] Create local setup guide
+- [x] Create production deployment guide
 - [ ] Create troubleshooting guide
 - [ ] Create release checklist
 

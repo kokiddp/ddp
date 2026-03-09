@@ -97,7 +97,7 @@ Trying to make a single product do all of these at once usually ends in architec
 
 ### Current service versions
 - **Appwrite** 1.6 (self-hosted, with separate console container `appwrite/console:5.2.58`)
-- **LiveKit** v1.8
+- **LiveKit** v1.9
 - **MariaDB** 10.11
 - **Redis** 7 (Alpine)
 - **Traefik** 2.11
@@ -337,6 +337,7 @@ Suggested fields:
 - gameSessionId
 - senderUserId
 - senderCharacterId
+- senderDisplayName
 - kind
 - body
 - createdAt
@@ -440,17 +441,20 @@ These states must not be conflated. They are different concerns.
 5. Significant milestones are snapshotted back to Appwrite for persistence.
 
 ### Text chat flow
-1. If session text chat is enabled, client can send a text message.
-2. Message is persisted in Appwrite.
-3. Clients subscribed to relevant records receive updates via Appwrite real-time events.
-4. Colyseus may also inject system messages into the text log if useful.
+1. If session text chat is enabled, client can send a text message via Colyseus.
+2. Colyseus server resolves the sender's character display name and broadcasts the message to all room participants.
+3. Message is persisted in Appwrite with sender metadata (userId, characterId, displayName).
+4. Chat history is loaded from Appwrite when a client joins, so messages persist across reconnections.
+5. Colyseus may also inject system messages into the text log if useful.
 
 ### Voice chat flow
 1. If session voice chat is enabled, player can opt into voice.
-2. Client requests a voice token from trusted backend logic.
-3. Backend verifies membership and session configuration.
-4. Backend issues a LiveKit token for the room.
+2. Client requests a voice token from the integration API.
+3. Integration API verifies authenticated identity, session membership, and `voiceChatEnabled` flag.
+4. Integration API issues a time-limited LiveKit token for the deterministic room (`ddp-session-<sessionId>`).
 5. Client connects to LiveKit and manages mic/speaker state locally.
+6. Client can select input/output audio devices and see a real-time mic level indicator.
+7. Active speakers are detected via LiveKit events and highlighted in the voice participant list.
 
 ---
 
@@ -650,10 +654,10 @@ This avoids turning the persistence layer into a panic room for every keystroke.
 ## LiveKit design notes
 
 ### Room naming
-Map each active session to a deterministic voice room name, for example:
+Each active session maps to a deterministic voice room name:
 
 ```text
-game_<sessionId>
+ddp-session-<sessionId>
 ```
 
 ### Token issuance
@@ -663,12 +667,16 @@ Never issue LiveKit tokens from the client. Tokens must be issued from trusted b
 - session voice capability
 
 ### Voice UX
-Recommended controls:
-- Join voice
-- Leave voice
+Implemented controls:
+- Join voice / Leave voice
 - Mute/unmute microphone
 - Deafen/undeafen local speaker
-- Show connected voice participants
+- Input device (microphone) selection
+- Output device (speaker) selection
+- Real-time mic level indicator (8-bar visualizer)
+- Voice participant list with character names
+- Active speaker highlighting (green glow)
+- Tooltips on participant names showing character name, user name, and ID
 
 ### Future voice features
 Possible future extensions:
@@ -940,7 +948,7 @@ pnpm dev
 | Appwrite Console | http://localhost/console |
 | Appwrite API | http://localhost/v1 |
 | Appwrite Realtime | ws://localhost/v1/realtime |
-| LiveKit | ws://localhost:7880 |
+| LiveKit (v1.9) | ws://localhost:7880 |
 | Colyseus (dev) | ws://localhost:2567 |
 | Integration API (dev) | http://localhost:3100 |
 | Web client (dev) | http://localhost:5173 |

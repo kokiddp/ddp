@@ -36,7 +36,7 @@ See [docs/setup/local-setup-guide.md](docs/setup/local-setup-guide.md) for a det
 apps/
   web/                  # Vue 3 web client
   colyseus-server/      # Authoritative session engine
-  integration-api/      # Token issuance and backend glue
+  integration-api/      # Token issuance, CORS, and backend glue
 packages/
   shared-types/         # Shared TypeScript types and contracts
   shared-rules/         # Protocol-level rule primitives
